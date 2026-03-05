@@ -61,7 +61,7 @@ def render_pyproject_template(
 
     # Build dependencies list
     dependencies = [
-        "fastmcp>=2.2.0,<3.0.0",
+        "fastmcp>=3.0.0,<4.0.0",
         "httpx>=0.23.0",
         "pydantic>=2.0.0,<3.0.0",
         "python-dateutil>=2.8.2",
@@ -276,7 +276,8 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
         await ctx.info(f"Executing {spec.tool_name}...")
 
         # Get authenticated API client from context state (set by middleware)
-        openapi_client = ctx.get_state('openapi_client')
+        # FastMCP 3.x: ctx.get_state() is now async
+        openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
 
@@ -480,7 +481,8 @@ async def {spec.resource_name}_resource({", ".join(func_params)}) -> str:
     """
     try:
         # Get authenticated API client from context state
-        openapi_client = ctx.get_state('openapi_client')
+        # FastMCP 3.x: ctx.get_state() is now async
+        openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
 
@@ -553,7 +555,7 @@ from openapi_client import (
 
 logger = logging.getLogger(__name__)
 
-# Create FastMCP 2.x Server for this module
+# Create FastMCP 3.x Server for this module
 mcp = FastMCP("{module_name}")
 
 

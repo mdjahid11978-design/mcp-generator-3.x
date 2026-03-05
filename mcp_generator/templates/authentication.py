@@ -224,11 +224,13 @@ class ApiClientContextMiddleware(Middleware):
 
                 fastmcp_ctx = getattr(context, "fastmcp_context", None)
                 if fastmcp_ctx:
-                    fastmcp_ctx.set_state("access_token", access_token)
+                    # FastMCP 3.x: set_state is now async
+                    await fastmcp_ctx.set_state("access_token", access_token)
 
             fastmcp_ctx = getattr(context, "fastmcp_context", None)
             if fastmcp_ctx:
-                fastmcp_ctx.set_state("openapi_client",openapi_client)
+                # FastMCP 3.x: set_state is now async; serializable=False for non-JSON objects
+                await fastmcp_ctx.set_state("openapi_client", openapi_client, serializable=False)
             else:
                 logger.warning("FastMCP context missing; unable to attach ApiClient")
 

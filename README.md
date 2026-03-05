@@ -116,6 +116,44 @@ uv run generate-mcp --url https://petstore3.swagger.io/api/v3/openapi.json
 - ✅ Writes package files and tests
 - ✅ Outputs to `generated_mcp/` directory
 
+#### Optional Features (Disabled by Default)
+
+By default, the generator creates a minimal, production-ready server. Enable additional features as needed:
+
+```bash
+# Enable persistent storage (for OAuth tokens, session state)
+uv run generate-mcp --enable-storage
+
+# Enable response caching (reduces backend API calls)
+uv run generate-mcp --enable-storage --enable-caching
+
+# Enable MCP resources (expose API data as resources)
+uv run generate-mcp --enable-resources
+
+# Enable all features
+uv run generate-mcp --enable-storage --enable-caching --enable-resources
+```
+
+**Available Features:**
+
+| Flag | Description | When to Use |
+|------|-------------|-------------|
+| `--enable-storage` | Persistent storage backend | OAuth refresh tokens, session data, user preferences |
+| `--enable-caching` | Response caching with TTL | Rate-limited APIs, expensive operations, slow endpoints |
+| `--enable-resources` | MCP resource templates | Expose API data for context/retrieval (GET endpoints) |
+
+> **Note**: `--enable-caching` requires `--enable-storage` as it uses the storage backend for cache persistence.
+
+**Why disabled by default?**
+- Keeps generated code simple and focused
+- Fewer dependencies to manage
+- Easier to understand and customize
+- Most APIs work perfectly without these features
+
+The generator will show which features are available at the end of generation with a copy-paste command to re-generate with features enabled.
+
+💡 **Tip**: Run `uv run generate-mcp --help` to see all available options and examples.
+
 ### 2. Register Your MCP Server
 
 ```bash

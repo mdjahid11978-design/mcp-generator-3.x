@@ -69,19 +69,24 @@ def generate_main_composition_server(
 ) -> str:
     """Generate main server that composes all modular servers.
 
+    Generates code targeting **FastMCP 3.x**.
+
+    Key FastMCP 3.x changes vs 2.x:
+      - ``mount(prefix=...)`` → ``mount(namespace=...)``
+      - ``import_server(...)`` is deprecated → use ``mount(...)``
+      - ``ctx.get_state()`` / ``ctx.set_state()`` are now **async**
+      - ``resource_prefix_format`` constructor kwarg removed
+      - ``create_streamable_http_app(...)`` → ``mcp.http_app(...)``
+      - ``InMemoryEventStore`` → ``EventStore`` from ``fastmcp.server.event_store``
+
     Args:
         modules: Dictionary of module specifications
         api_metadata: API metadata from OpenAPI spec
         security_config: Security configuration
-        composition_strategy: "mount" for dynamic composition (default) or "import" for static
-        resource_prefix_format: "path" (default, FastMCP 2.4+) or "protocol" (legacy)
+        composition_strategy: "mount" (default, recommended for v3)
+        resource_prefix_format: Ignored in v3 (kept for config compat)
     """
-    # Build import statements
-    # Expect `modules` to be a dict keyed by ModuleSpec.module_name. Use the
-    # keys and sort them for deterministic generation order.
     module_names = sorted(modules.keys())
-
-    # Calculate total tool count
     total_tool_count = sum(spec.tool_count for spec in modules.values())
 
     # Build import statements using the actual generated filename from ModuleSpec
@@ -92,68 +97,11 @@ def generate_main_composition_server(
         ]
     )
 
-    # Build composition calls based on strategy
-    if composition_strategy == "import":
-        # Static composition - requires async
-        compositions = "\n    ".join(
-            [f'await app.import_server({name}_mcp, prefix="{name}")' for name in module_names]
-        )
-        is_async_composition = True
-    else:
-        # Dynamic composition (mount) - synchronous
-        compositions = "\n    ".join(
-            [f'app.mount({name}_mcp, prefix="{name}")' for name in module_names]
-        )
-        is_async_composition = False
-
-    # Determine if we need asyncio import: either composition itself is async
-    # (composition_strategy == "import") or we will perform a one-time
-    # import/copy of subservers into the main app when running under HTTP
-    # transport for the "mount" strategy. That one-time import uses
-    # await app.import_server(...), so we must emit an async helper and
-    # import asyncio in the generated code.
-    need_asyncio = is_async_composition or composition_strategy == "mount"
-
-    # If we are using dynamic composition (mount), emit an async helper that
-    # will import/copy each subserver into the main app. This helper will be
-    # called via asyncio.run(...) in the HTTP branch of main(). We build the
-    # helper here as a plain string so it can be inserted into the generated
-    # server module.
-    import_subservers_def = ""
-    if composition_strategy == "mount":
-        lines = ["async def _import_subservers_once():"]
-        lines.append("    # One-time import of subservers into main app to populate tool registry")
-        for name in module_names:
-            # Use try/except around each import to avoid failing startup if a
-            # single subserver import has issues.
-            lines.append("    try:")
-            # We need to produce code that awaits app.import_server({name}_mcp, prefix=\"{name}\")
-            lines.append(f'        await app.import_server({name}_mcp, prefix="{name}")')
-            # logger.debug line in the generated code must keep braces for its f-string;
-            # double braces in this generator f-string produce single braces in the output.
-            # Use an outer f-string so the generator substitutes the literal
-            # subserver name; keep double braces for _exc so the generated
-            # code contains a runtime f-string that interpolates the
-            # exception variable in the generated module.
-            lines.append(
-                f'    except Exception as _exc:\n        logger.debug(f"Could not import subserver {name}: {{_exc}}")'
-            )
-        import_subservers_def = "\n" + "\n".join(lines) + "\n"
-
-        # Pre-built HTTP branch injection (properly indented) to call the
-        # one-time import helper when running in HTTP transport under the
-        # dynamic composition (mount) strategy. Keep this as a separate
-        # string to preserve indentation in the generated code.
-        http_import_call = ""
-        if composition_strategy == "mount":
-            http_import_call = (
-                "        # For HTTP transport and dynamic composition (mount), ensure subservers\n"
-                "        # are imported/copied into the main app once so the tool registry is populated.\n"
-                "        try:\n"
-                "            asyncio.run(_import_subservers_once())\n"
-                "        except Exception as _exc:\n"
-                '            logger.debug(f"Could not import subservers into main app: {_exc}")\n'
-            )
+    # In FastMCP 3.x mount() is synchronous and the recommended approach.
+    # import_server() is deprecated → always use mount(namespace=...).
+    compositions = "\n    ".join(
+        [f'app.mount({name}_mcp, namespace="{name}")' for name in module_names]
+    )
 
     # Build comprehensive header
     header_lines = [
@@ -164,50 +112,32 @@ def generate_main_composition_server(
         f"Version: {api_metadata.version}",
     ]
 
-    # Add contact if available
     if api_metadata.contact and api_metadata.contact.get("email"):
         header_lines.append(f"Contact: {api_metadata.contact['email']}")
-
-    # Add license if available
     if api_metadata.license and api_metadata.license.get("name"):
         header_lines.append(f"License: {api_metadata.license['name']}")
-
-    # Add docs if available
     if api_metadata.external_docs and api_metadata.external_docs.get("url"):
         header_lines.append(f"Documentation: {api_metadata.external_docs['url']}")
-
-    # Add composition strategy info to header
-    strategy_info = (
-        f"Composition Strategy: {composition_strategy}\n"
-        f"  - mount: Live linking, dynamic updates, minimal overhead for local servers\n"
-        f"  - import: One-time copy, no runtime delegation, best for performance\n"
-        f"Resource Prefix Format: {resource_prefix_format}\n"
-        f"  - path: resource://prefix/path (FastMCP 2.4+ default)\n"
-        f"  - protocol: prefix+resource://path (legacy)"
-    )
 
     header_lines.extend(
         [
             "",
             "This server composes all modular API servers into a unified MCP interface.",
-            "",
-            strategy_info,
+            f"Composition: mount() with namespace isolation (FastMCP 3.x)",
             "",
             "Auto-generated by mcp_generator.",
             "DO NOT EDIT MANUALLY - regenerate using: python -m mcp_generator",
-            "Configuration: fastmcp.json (composition.strategy, composition.resource_prefix_format)",
+            "Configuration: fastmcp.json",
             '"""',
         ]
     )
 
     header_doc = "\n".join(header_lines)
 
-    # Conditional authentication imports and setup
-    # Note: Even APIs without authentication need middleware to set up openapi_client
+    # --- Authentication imports (always need middleware for openapi_client) ---
     auth_imports = """
 # Import API client middleware (required even without authentication)
 from middleware.authentication import ApiClientContextMiddleware
-from middleware.event_store import InMemoryEventStore
 """
     auth_middleware_setup = """
     app.add_middleware(ApiClientContextMiddleware(
@@ -217,7 +147,6 @@ from middleware.event_store import InMemoryEventStore
     auth_argparse = ""
     auth_validation = ""
 
-    # Additional imports and argparse for authenticated APIs
     if security_config.has_authentication():
         auth_imports += """from middleware.oauth_provider import create_jwt_verifier, build_authentication_stack, RequireScopesMiddleware
 """
@@ -236,9 +165,48 @@ from middleware.event_store import InMemoryEventStore
         args.validate_tokens = False
 """
 
+    # --- HTTP token-validation block (only when auth is configured) ---
+    if security_config.has_authentication():
+        http_token_validation_block = """
+        # For HTTP transport with token validation, use ASGI middleware
+        if hasattr(args, 'validate_tokens') and args.validate_tokens:
+            logger.info("  🔧 ASGI Middleware: Authentication (JWT validation) at HTTP layer")
+            logger.info("  🔑 JWT validation: Enabled via Starlette auth backend + scope guard")
+
+            # Create JWT verifier for token validation
+            jwt_verifier = create_jwt_verifier()
+            if jwt_verifier:
+                asgi_middleware = build_authentication_stack(jwt_verifier, require_auth=True)
+
+                from starlette.middleware import Middleware as StarletteMiddleware
+                from fastmcp.server.event_store import EventStore
+
+                event_store = EventStore()
+                http_app = app.http_app(
+                    path="/mcp",
+                    event_store=event_store,
+                    middleware=[StarletteMiddleware(m) for m in asgi_middleware] if asgi_middleware else None,
+                )
+
+                import uvicorn, anyio
+                logger.info("  ✅ ASGI middleware configured with token enforcement")
+                config = uvicorn.Config(http_app, host=args.host, port=args.port, log_level="info")
+                uvicorn_server = uvicorn.Server(config)
+                anyio.run(uvicorn_server.serve)
+            else:
+                logger.warning("  ⚠️ JWT verifier initialization failed - falling back to backend validation")
+                app.run(transport="http", host=args.host, port=args.port)
+        else:
+            logger.info("  🔧 FastMCP Middleware: Error handling → Auth (backend validation) → Timing → Logging")
+            app.run(transport="http", host=args.host, port=args.port)"""
+    else:
+        http_token_validation_block = """
+        logger.info("  🔧 FastMCP Middleware: Error handling → Auth (backend validation) → Timing → Logging")
+        app.run(transport="http", host=args.host, port=args.port)"""
+
+    # --- Build the generated code ---
     code = f'''{header_doc}
 
-{"import asyncio" if need_asyncio else ""}
 import logging
 import os
 import sys
@@ -248,7 +216,6 @@ from fastmcp import FastMCP
 from fastmcp.server.middleware.timing import DetailedTimingMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
-from fastmcp.server.http import create_streamable_http_app
 
 # Add the src folder and generated folder to the Python path
 src_path = Path(__file__).parent
@@ -263,41 +230,15 @@ if str(generated_path) not in sys.path:
 
 logger = logging.getLogger(__name__)
 
-# Create main FastMCP 2.x Server (using 'app' for fastmcp auto-detection)
-app = FastMCP("{api_metadata.title}", resource_prefix_format="{resource_prefix_format}")
-{import_subservers_def}
-'''
+# Create main FastMCP 3.x Server (using 'app' for fastmcp auto-detection)
+app = FastMCP("{api_metadata.title}")
 
-    # Event store is always needed for middleware
-    code += """
-# Create event store for SSE resumability
-event_store = InMemoryEventStore(max_events_per_stream=1000)
-logger.info(f"📦 Event store initialized: {{event_store.get_stats()}}")
-"""
 
-    # Generate composition function based on strategy
-    composition_async = "async " if is_async_composition else ""
-    composition_await = "await " if is_async_composition else ""
-    composition_desc = (
-        "import_server() for static composition - one-time copy of subserver components"
-        if is_async_composition
-        else "mount() for dynamic composition - changes to subservers are immediately reflected"
-    )
-    performance_note = (
-        "Better performance - no runtime delegation overhead"
-        if is_async_composition
-        else "Minimal overhead for local servers, allows runtime updates"
-    )
-
-    code += f'''
-
-{composition_async}def _compose_mcp_servers():
+def _compose_mcp_servers():
     """Compose all modular servers into the main server.
 
-    Uses {composition_desc}.
-    This is configured via fastmcp.json (composition.strategy).
-
-    Performance: {performance_note}
+    Uses mount(namespace=...) for composition (FastMCP 3.x).
+    Changes to mounted subservers are immediately reflected.
     """
     try:
         print("🔗 Composing modular servers...")
@@ -325,7 +266,7 @@ async def create_server() -> FastMCP:
     Returns:
         FastMCP: The fully composed and configured server instance
     """
-    {composition_await}_compose_mcp_servers()
+    _compose_mcp_servers()
     return app
 
 
@@ -336,7 +277,7 @@ API_VERSION = "{api_metadata.version}"
 TOTAL_TOOL_COUNT = {total_tool_count}
 
 def main():
-    """Run the FastMCP 2.x backend tools server with JWT authentication."""
+    """Run the FastMCP 3.x backend tools server."""
     import argparse
     import json
     from pathlib import Path
@@ -355,7 +296,7 @@ def main():
     default_validate_tokens = fastmcp_config.get("middleware", {{}}).get("config", {{}}).get("authentication", {{}}).get("validate_tokens", False)
 
     # Build comprehensive description
-    description_parts = [f"{{API_TITLE}} - FastMCP 2.x MCP Server"]
+    description_parts = [f"{{API_TITLE}} - FastMCP 3.x MCP Server"]
     if API_DESCRIPTION:
         description_parts.append(API_DESCRIPTION)
     if API_VERSION:
@@ -399,114 +340,23 @@ def main():
     except UnicodeEncodeError:
         print("[OK] FastMCP middleware configured")
 
-    # Compose all servers (strategy: {composition_strategy})
-    {"asyncio.run(" if is_async_composition else ""}_compose_mcp_servers(){")" if is_async_composition else ""}
+    # Compose all servers
+    _compose_mcp_servers()
 
     if args.transport == "stdio":
-        logger.info("🚀 Starting FastMCP 2.x server with STDIO transport")
+        logger.info("🚀 Starting FastMCP 3.x server with STDIO transport")
         logger.info("  🔐 Authentication: BACKEND_API_TOKEN environment variable")
         logger.info("  🔒 Token validation: N/A (STDIO mode - backend validates tokens)")
         logger.info(f"  📦 Modules: {len(module_names)} composed ({{TOTAL_TOOL_COUNT}} MCP tools)")
         logger.info("  🔧 Middleware: Error handling → Auth → Timing → Logging")
         app.run(transport="stdio")
     else:  # http
-        logger.info(f"🚀 Starting FastMCP 2.x server with HTTP transport on {{args.host}}:{{args.port}}")
+        logger.info(f"🚀 Starting FastMCP 3.x server with HTTP transport on {{args.host}}:{{args.port}}")
         logger.info("  🔐 Authentication: Bearer token in Authorization header")
-{http_import_call}
+
         logger.info(f"  🔒 Token validation: {{'enabled (JWT)' if hasattr(args, 'validate_tokens') and args.validate_tokens else 'disabled (delegated to backend)'}}")
         logger.info(f"  📦 Modules: {len(module_names)} composed ({{TOTAL_TOOL_COUNT}} MCP tools)")
-
-        # For HTTP transport with token validation, use ASGI middleware
-        if hasattr(args, 'validate_tokens') and args.validate_tokens:
-            logger.info("  🔧 ASGI Middleware: Authentication (JWT validation) at HTTP layer")
-            logger.info("  🔑 JWT validation: Enabled via Starlette auth backend + scope guard")
-            logger.info("  📦 Event store: Enabled for SSE resumability")
-
-            # Create JWT verifier for token validation
-            jwt_verifier = create_jwt_verifier()
-            if jwt_verifier:
-                # Create ASGI authentication middleware stack with enforcement
-                # Note: Middleware runs in reverse order, so RequireScopesMiddleware runs AFTER AuthenticationMiddleware
-                asgi_middleware = build_authentication_stack(jwt_verifier, require_auth=True)
-
-                # Get the HTTP app with authentication middleware and event store
-                # Fallback validation - if JWT validation fails, try this
-                # NOTE: middleware must be an iterable, not a function. If you need custom logic, use a proper ASGI middleware class.
-                http_app = create_streamable_http_app(
-                    server=app,
-                    streamable_http_path="/mcp",
-                    event_store=event_store,
-                    json_response=False,
-                    stateless_http=False,
-                    debug=False
-                    # No 'middleware' argument unless it's a list of ASGI middleware
-                )
-
-                # Run with uvicorn
-                import uvicorn
-                logger.info("  ✅ ASGI middleware configured with token enforcement")
-                config = uvicorn.Config(
-                    http_app,  # Use http_app directly, middleware is already applied
-                    host=args.host,
-                    port=args.port,
-                    log_level="info"
-                )
-                uvicorn_server = uvicorn.Server(config)
-
-                import anyio
-                anyio.run(uvicorn_server.serve)
-            else:
-                logger.warning("  ⚠️ JWT verifier initialization failed - falling back to backend validation")
-                logger.info("  📦 Event store: Enabled for SSE resumability")
-
-                # Get HTTP app with event store
-                http_app = create_streamable_http_app(
-                    server=app,
-                    streamable_http_path="/mcp",
-                    event_store=event_store,
-                    json_response=False,
-                    stateless_http=False,
-                    debug=False
-                )
-
-                # Run with uvicorn
-                import uvicorn
-                config = uvicorn.Config(
-                    http_app,
-                    host=args.host,
-                    port=args.port,
-                    log_level="info"
-                )
-                uvicorn_server = uvicorn.Server(config)
-
-                import anyio
-                anyio.run(uvicorn_server.serve)
-        else:
-            logger.info("  🔧 FastMCP Middleware: Error handling → Auth (backend validation) → Timing → Logging")
-            logger.info("  📦 Event store: Enabled for SSE resumability")
-
-            # Get HTTP app with event store
-            http_app = create_streamable_http_app(
-                server=app,
-                streamable_http_path="/mcp",
-                event_store=event_store,
-                json_response=False,
-                stateless_http=False,
-                debug=False
-            )
-
-            # Run with uvicorn
-            import uvicorn
-            config = uvicorn.Config(
-                http_app,
-                host=args.host,
-                port=args.port,
-                log_level="info"
-            )
-            uvicorn_server = uvicorn.Server(config)
-
-            import anyio
-            anyio.run(uvicorn_server.serve)
+{http_token_validation_block}
 
 
 if __name__ == "__main__":

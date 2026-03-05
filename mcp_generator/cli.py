@@ -86,18 +86,27 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
-        description="MCP Generator 2.0 - OpenAPI to FastMCP 2.x Server Generator",
+        description="MCP Generator 3.0 - OpenAPI to FastMCP 3.x Server Generator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Use local openapi.json (default)
+  # Basic generation (minimal server)
   generate-mcp
 
-  # Specify custom file
+  # With custom OpenAPI file
   generate-mcp --file ./my-api-spec.yaml
 
   # Download from URL
   generate-mcp --url https://petstore3.swagger.io/api/v3/openapi.json
+
+  # With optional features
+  generate-mcp --enable-storage --enable-caching
+  generate-mcp --enable-resources
+
+Optional Features (disabled by default for simplicity):
+  --enable-storage    Persistent storage for OAuth tokens & state
+  --enable-caching    Response caching (reduces API calls)
+  --enable-resources  MCP resources from GET endpoints
 
 Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         """,
@@ -121,27 +130,27 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         "--enable-storage",
         action="store_true",
         default=False,
-        help="Generate pluggable storage backend for persistent state and OAuth tokens",
+        help="Enable persistent storage backend (for OAuth tokens, session state, user data)",
     )
 
     parser.add_argument(
         "--enable-caching",
         action="store_true",
         default=False,
-        help="Generate response caching middleware (requires --enable-storage)",
+        help="Enable response caching middleware (reduces backend API calls, requires --enable-storage)",
     )
 
     parser.add_argument(
         "--enable-resources",
         action="store_true",
         default=False,
-        help="Generate MCP resource templates from GET endpoints with RFC 6570 URI templates",
+        help="Generate MCP resource templates from GET endpoints (exposes API data as resources)",
     )
 
     args = parser.parse_args()
 
     print("=" * 80)
-    print("MCP Generator 2.0 - OpenAPI to FastMCP 2.x Server Generator")
+    print("MCP Generator 3.0 - OpenAPI to FastMCP 3.x Server Generator")
     print("=" * 80)
 
     # Use current working directory for all operations
@@ -353,8 +362,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         print("\n🔗 Generating main composition server...")
 
         # Load composition configuration from fastmcp.json if it exists
-        composition_strategy = "mount"  # default
-        resource_prefix_format = "path"  # default
+        composition_strategy = "mount"  # default (FastMCP 3.x uses mount with namespace)
         fastmcp_json_path = output_dir / "fastmcp.json"
         if fastmcp_json_path.exists():
             try:
@@ -364,9 +372,6 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
                     config = json.load(f)
                     composition_config = config.get("composition", {})
                     composition_strategy = composition_config.get("strategy", "mount")
-                    resource_prefix_format = config.get("composition", {}).get(
-                        "resource_prefix_format", "path"
-                    )
             except Exception as e:
                 print(f"⚠️  Could not load composition config from fastmcp.json: {e}")
 
@@ -375,7 +380,6 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             api_metadata,
             security_config,
             composition_strategy=composition_strategy,
-            resource_prefix_format=resource_prefix_format,
         )
         # Use API title for filename (sanitized - replace spaces, hyphens, AND dots)
         # Also remove version patterns like "1.0", "v2.0", "3.0" from the name
@@ -479,6 +483,14 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         else:
             print("   • No authentication required (public API)")
             print("   • Created basic test suite with automated test runner")
+        
+        # Show enabled optional features
+        if args.enable_storage:
+            print("   • Enabled: Persistent storage backend (storage.py, cache_middleware.py)")
+        if args.enable_caching:
+            print("   • Enabled: Response caching with configurable TTL")
+        if args.enable_resources and total_resources > 0:
+            print("   • Enabled: MCP resources for data access")
 
         print("\n📂 Output Location:")
         print(f"   {output_dir.relative_to(src_dir)}/")
@@ -513,6 +525,36 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         print("   • Tests: test/generated/")
         print("   • Test Runner: test/run_tests.py")
         print("   • GitHub: https://github.com/quotentiroler/mcp-generator-2.0")
+
+        # Show optional features that were not enabled
+        disabled_features = []
+        if not args.enable_storage:
+            disabled_features.append(
+                ("--enable-storage", "Persistent OAuth tokens & state across restarts")
+            )
+        if not args.enable_caching:
+            disabled_features.append(
+                ("--enable-caching", "Cache API responses (reduces rate limit impact)")
+            )
+        if not args.enable_resources:
+            disabled_features.append(
+                ("--enable-resources", "Expose API data as MCP resources")
+            )
+
+        if disabled_features:
+            print("\n💡 Optional Features (not enabled):")
+            for flag, description in disabled_features:
+                print(f"   {flag:20s} → {description}")
+            
+            # Build regeneration command
+            flags_str = " ".join([flag for flag, _ in disabled_features])
+            if args.url:
+                print(f"\n   To enable: generate-mcp --url {args.url} {flags_str}")
+            elif args.file != "./openapi.json":
+                print(f"\n   To enable: generate-mcp --file {args.file} {flags_str}")
+            else:
+                print(f"\n   To enable: generate-mcp {flags_str}")
+
         print()
 
     except ModuleNotFoundError as e:

@@ -1,11 +1,11 @@
-# MCP Generator 2.0
+# MCP Generator 3.1
 
-**🚀 OpenAPI to FastMCP 2.x Server Generator**
+**🚀 OpenAPI to FastMCP 3.x Server Generator**
 
 [![GitHub Release](https://img.shields.io/github/v/release/quotentiroler/mcp-generator-2.0?include_prereleases&label=version)](https://github.com/quotentiroler/mcp-generator-2.0/releases)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-v3.11-3776ab.svg)](https://www.python.org/downloads/)
-[![FastMCP 2.x](https://img.shields.io/badge/FastMCP-2.x-green.svg)](https://github.com/jlowin/fastmcp)
+[![FastMCP 3.x](https://img.shields.io/badge/FastMCP-3.x-green.svg)](https://github.com/PrefectHQ/fastmcp)
 
 Transform any OpenAPI specification into a production-ready Model Context Protocol (MCP) server with enterprise-grade authentication, modular architecture, and comprehensive middleware support.
 
@@ -13,7 +13,7 @@ Transform any OpenAPI specification into a production-ready Model Context Protoc
 
 ## 🎯 Overview
 
-MCP Generator 2.0 is an advanced code generator that automatically creates FastMCP 2.x servers from OpenAPI 3.0.x/3.1.x specifications. It bridges REST APIs and AI agents by generating fully-functional MCP tools that AI assistants like Claude, ChatGPT, and others can use to interact with your APIs.
+MCP Generator 3.1 is an advanced code generator that automatically creates FastMCP 3.x servers from OpenAPI 3.0.x/3.1.x specifications. It bridges REST APIs and AI agents by generating fully-functional MCP tools that AI assistants like Claude, ChatGPT, and others can use to interact with your APIs.
 
 ### Supported OpenAPI Versions
 
@@ -23,17 +23,18 @@ MCP Generator 2.0 is an advanced code generator that automatically creates FastM
 
 > **Note**: Both JSON and YAML formats are supported. The generator uses OpenAPI Generator CLI under the hood, which handles both formats seamlessly.
 
-## 🏆 Why MCP Generator 2.0?
+## 🏆 Why MCP Generator 3.1?
 
-| Feature                     | MCP Generator 2.0                          | Typical Generators         |
+| Feature                     | MCP Generator 3.1                          | Typical Generators         |
 | --------------------------- | ------------------------------------------ | -------------------------- |
 | **Architecture**      | Modular, composable sub-servers            | Monolithic single file     |
 | **Authentication**    | JWT validation with JWKS, OAuth2 flows     | Basic token passing        |
-| **Middleware System** | Full FastMCP 2.x middleware stack          | Limited or none            |
+| **Middleware System** | Full FastMCP 3.x middleware stack          | Limited or none            |
 | **Scalability**       | One module per API class                   | All operations in one file |
 | **Type Safety**       | Full Pydantic model support                | Basic validation           |
 | **Testing**           | Auto-generated test suites                 | Manual testing only        |
 | **Observability**     | Timing, logging, error handling middleware | Basic logging              |
+| **Tag Discovery**     | Auto-discovers undeclared API tags          | Manual tag mapping         |
 | **Event Store**       | Resumable SSE with event persistence       | Simple SSE                 |
 | **Production Ready**  | ✅ Yes                                     | ⚠️ Often prototypes      |
 
@@ -110,6 +111,7 @@ uv run generate-mcp --url https://petstore3.swagger.io/api/v3/openapi.json
 **What happens:**
 
 - ✅ Generates Python API client from OpenAPI spec
+- ✅ Auto-discovers undeclared tags from API paths (tag auto-discovery)
 - ✅ Creates modular MCP server modules
 - ✅ Generates authentication middleware
 - ✅ Creates OAuth2 provider
@@ -368,7 +370,7 @@ This project installs three CLI commands. Here's a quick cheatsheet.
 
 ### generate-mcp
 
-- Description: Generate a FastMCP 2.x server from an OpenAPI 3.0.x/3.1.x spec.
+- Description: Generate a FastMCP 3.x server from an OpenAPI 3.0.x/3.1.x spec.
 - Options:
   - --file <path>  Path to spec file (default: ./openapi.json)
   - --url <url>    Download spec from URL (overrides --file)
@@ -671,7 +673,7 @@ This project is licensed under the **Apache License 2.0**.
 
 ### Why Apache 2.0?
 
-Apache 2.0 is a permissive license that promotes wide adoption while providing patent protection. It's business-friendly, widely accepted by enterprises, and commonly used for development tools and code generators. This license allows you to use MCP Generator 2.0 in your projects without worrying about copyleft requirements.
+Apache 2.0 is a permissive license that promotes wide adoption while providing patent protection. It's business-friendly, widely accepted by enterprises, and commonly used for development tools and code generators. This license allows you to use MCP Generator 3.1 in your projects without worrying about copyleft requirements.
 
 **Generated Code:** The code generated by this tool is NOT considered a derivative work of the generator itself. You may license your generated MCP servers however you choose.
 
@@ -681,7 +683,7 @@ For the full license text, see [LICENSE](LICENSE) or visit https://www.apache.or
 
 ## 🙏 Acknowledgments
 
-- **FastMCP**: Built on the excellent [FastMCP 2.x](https://github.com/jlowin/fastmcp) framework
+- **FastMCP**: Built on the excellent [FastMCP 3.x](https://github.com/PrefectHQ/fastmcp) framework
 - **OpenAPI Generator**: Uses [OpenAPI Generator](https://openapi-generator.tech/) for client generation
 - **Model Context Protocol**: Implements the [MCP specification](https://modelcontextprotocol.io/)
 - **Anthropic**: For the MCP standard and Claude Desktop integration

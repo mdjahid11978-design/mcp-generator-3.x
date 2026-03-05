@@ -8,10 +8,10 @@ from mcp_generator.utils import (
     sanitize_name,
 )
 
-
 # ---------------------------------------------------------------------------
 # camel_to_snake
 # ---------------------------------------------------------------------------
+
 
 class TestCamelToSnake:
     @pytest.mark.parametrize(
@@ -34,6 +34,7 @@ class TestCamelToSnake:
 # ---------------------------------------------------------------------------
 # sanitize_name
 # ---------------------------------------------------------------------------
+
 
 class TestSanitizeName:
     def test_get_collection_becomes_list(self) -> None:
@@ -66,6 +67,7 @@ class TestSanitizeName:
 # ---------------------------------------------------------------------------
 # normalize_version
 # ---------------------------------------------------------------------------
+
 
 class TestNormalizeVersion:
     def test_plain_version_untouched(self) -> None:

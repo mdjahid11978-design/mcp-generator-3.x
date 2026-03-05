@@ -1,6 +1,6 @@
 """Tests for mcp_generator.models — dataclass behaviour and helpers."""
 
-from mcp_generator.models import ApiMetadata, ModuleSpec, SecurityConfig, OAuthConfig, OAuthFlowConfig
+from mcp_generator.models import ApiMetadata, ModuleSpec, OAuthConfig, SecurityConfig
 
 
 class TestApiMetadata:
@@ -30,9 +30,7 @@ class TestSecurityConfig:
         assert sc.has_authentication() is True
 
     def test_has_authentication_true_with_oauth_only(self) -> None:
-        sc = SecurityConfig(
-            oauth_config=OAuthConfig(scheme_name="oauth2")
-        )
+        sc = SecurityConfig(oauth_config=OAuthConfig(scheme_name="oauth2"))
         assert sc.has_authentication() is True
 
     def test_jwks_uri_fallback(self) -> None:

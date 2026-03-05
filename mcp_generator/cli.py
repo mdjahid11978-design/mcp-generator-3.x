@@ -483,7 +483,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         else:
             print("   • No authentication required (public API)")
             print("   • Created basic test suite with automated test runner")
-        
+
         # Show enabled optional features
         if args.enable_storage:
             print("   • Enabled: Persistent storage backend (storage.py, cache_middleware.py)")
@@ -537,15 +537,13 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
                 ("--enable-caching", "Cache API responses (reduces rate limit impact)")
             )
         if not args.enable_resources:
-            disabled_features.append(
-                ("--enable-resources", "Expose API data as MCP resources")
-            )
+            disabled_features.append(("--enable-resources", "Expose API data as MCP resources"))
 
         if disabled_features:
             print("\n💡 Optional Features (not enabled):")
             for flag, description in disabled_features:
                 print(f"   {flag:20s} → {description}")
-            
+
             # Build regeneration command
             flags_str = " ".join([flag for flag, _ in disabled_features])
             if args.url:

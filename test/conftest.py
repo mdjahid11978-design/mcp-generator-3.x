@@ -1,13 +1,17 @@
 """Shared fixtures for mcp_generator tests."""
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
 
-from mcp_generator.models import ApiMetadata, ModuleSpec, SecurityConfig, OAuthConfig, OAuthFlowConfig
-
+from mcp_generator.models import (
+    ApiMetadata,
+    ModuleSpec,
+    OAuthConfig,
+    OAuthFlowConfig,
+    SecurityConfig,
+)
 
 # ---------------------------------------------------------------------------
 # Minimal OpenAPI specs

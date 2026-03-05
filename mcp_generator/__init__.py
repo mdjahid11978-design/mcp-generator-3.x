@@ -38,6 +38,7 @@ __all__ = [
     "generate_all",
     "generate_modular_servers",
     "generate_main_composition_server",
+    "enrich_spec_tags",
     "get_api_modules",
     "get_api_metadata",
     "get_security_config",

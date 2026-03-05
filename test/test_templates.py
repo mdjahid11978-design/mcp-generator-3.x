@@ -4,18 +4,19 @@ import re
 
 import pytest
 
+from mcp_generator.models import OAuthConfig, OAuthFlowConfig, SecurityConfig
 from mcp_generator.templates.authentication import generate_authentication_middleware
 from mcp_generator.templates.event_store import generate_event_store
-from mcp_generator.models import SecurityConfig, OAuthConfig, OAuthFlowConfig
-
 
 # ---------------------------------------------------------------------------
 # Authentication template
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def auth_code() -> str:
     from mcp_generator.models import ApiMetadata
+
     meta = ApiMetadata(
         title="Test",
         version="1.0.0",
@@ -50,7 +51,7 @@ class TestAuthenticationTemplate:
 
     def test_openapi_client_serializable_false(self, auth_code: str) -> None:
         """Non-JSON objects need serializable=False in FastMCP 3.x."""
-        assert 'serializable=False' in auth_code
+        assert "serializable=False" in auth_code
 
     def test_contains_api_client_middleware(self, auth_code: str) -> None:
         assert "class ApiClientContextMiddleware" in auth_code
@@ -59,6 +60,7 @@ class TestAuthenticationTemplate:
 # ---------------------------------------------------------------------------
 # EventStore template
 # ---------------------------------------------------------------------------
+
 
 class TestEventStoreTemplate:
     def test_generates_code(self) -> None:

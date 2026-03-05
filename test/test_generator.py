@@ -5,7 +5,6 @@ import pytest
 from mcp_generator.generator import generate_main_composition_server
 from mcp_generator.models import ApiMetadata, ModuleSpec, SecurityConfig
 
-
 # ---------------------------------------------------------------------------
 # Fixtures (local to this module — also re-uses conftest fixtures)
 # ---------------------------------------------------------------------------
@@ -36,6 +35,7 @@ def _two_modules() -> dict[str, ModuleSpec]:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateMainCompositionServer:
     """Test the main composition server code generation (FastMCP 3.x)."""

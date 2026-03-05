@@ -1,18 +1,14 @@
 """Tests for mcp_generator.introspection — tag auto-discovery and spec loading."""
 
 import copy
-import json
-from pathlib import Path
-
-import pytest
 
 from mcp_generator.introspection import enrich_spec_tags
-from test.conftest import MINIMAL_OPENAPI_SPEC, OPENAPI_SPEC_WITH_SECURITY
-
+from test.conftest import MINIMAL_OPENAPI_SPEC
 
 # ---------------------------------------------------------------------------
 # enrich_spec_tags
 # ---------------------------------------------------------------------------
+
 
 class TestEnrichSpecTags:
     def test_discovers_undeclared_tag(self) -> None:
@@ -46,7 +42,9 @@ class TestEnrichSpecTags:
             "openapi": "3.0.3",
             "info": {"title": "T", "version": "1"},
             "paths": {
-                "/x": {"get": {"tags": ["alpha", "beta"], "responses": {"200": {"description": "OK"}}}}
+                "/x": {
+                    "get": {"tags": ["alpha", "beta"], "responses": {"200": {"description": "OK"}}}
+                }
             },
         }
         discovered = enrich_spec_tags(spec)
@@ -75,8 +73,15 @@ class TestEnrichSpecTags:
             "info": {"title": "T", "version": "1"},
             "paths": {
                 "/a": {"get": {"tags": ["alpha"], "responses": {"200": {"description": "OK"}}}},
-                "/b": {"post": {"tags": ["beta"], "responses": {"201": {"description": "Created"}}}},
-                "/c": {"delete": {"tags": ["gamma"], "responses": {"204": {"description": "No Content"}}}},
+                "/b": {
+                    "post": {"tags": ["beta"], "responses": {"201": {"description": "Created"}}}
+                },
+                "/c": {
+                    "delete": {
+                        "tags": ["gamma"],
+                        "responses": {"204": {"description": "No Content"}},
+                    }
+                },
             },
             "tags": [{"name": "alpha", "description": "Already declared"}],
         }
@@ -87,7 +92,7 @@ class TestEnrichSpecTags:
     def test_idempotent_on_second_call(self) -> None:
         """Calling enrich_spec_tags twice should not add duplicates."""
         spec = copy.deepcopy(MINIMAL_OPENAPI_SPEC)
-        first = enrich_spec_tags(spec)
+        enrich_spec_tags(spec)  # first call discovers tags
         second = enrich_spec_tags(spec)
         assert second == []  # nothing new the second time
         assert len(spec["tags"]) == 2  # pet + user

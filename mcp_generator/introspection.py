@@ -46,7 +46,7 @@ def enrich_spec_tags(spec: dict[str, Any]) -> list[str]:
             for tag in operation.get("tags", []):
                 if tag not in declared_tags:
                     spec.setdefault("tags", []).append(
-                        {"name": tag, "description": f"Auto-discovered from endpoint definitions"}
+                        {"name": tag, "description": "Auto-discovered from endpoint definitions"}
                     )
                     declared_tags.add(tag)
                     discovered.append(tag)
@@ -198,7 +198,9 @@ def get_api_metadata(base_dir: Path | None = None) -> ApiMetadata:
                 # are included in the metadata (and downstream generation).
                 discovered = enrich_spec_tags(spec)
                 if discovered:
-                    print(f"   🏷️  Auto-discovered {len(discovered)} undeclared tag(s): {', '.join(discovered)}")
+                    print(
+                        f"   🏷️  Auto-discovered {len(discovered)} undeclared tag(s): {', '.join(discovered)}"
+                    )
 
                 # Extract info object fields
                 info = spec.get("info", {})

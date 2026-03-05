@@ -1,16 +1,12 @@
 """Tests for mcp_generator.renderers — code generation output validation."""
 
-import re
-
-import pytest
-
-from mcp_generator.models import ApiMetadata, ModuleSpec, SecurityConfig
-from mcp_generator.renderers import render_pyproject_template, render_fastmcp_template
-
+from mcp_generator.models import ApiMetadata, SecurityConfig
+from mcp_generator.renderers import render_fastmcp_template, render_pyproject_template
 
 # ---------------------------------------------------------------------------
 # render_pyproject_template
 # ---------------------------------------------------------------------------
+
 
 class TestRenderPyprojectTemplate:
     def test_contains_fastmcp_3x_dep(
@@ -19,7 +15,7 @@ class TestRenderPyprojectTemplate:
         content = render_pyproject_template(
             api_metadata, security_config_none, "test_api", total_tools=5
         )
-        assert 'fastmcp>=3.0.0,<4.0.0' in content
+        assert "fastmcp>=3.0.0,<4.0.0" in content
 
     def test_does_not_contain_fastmcp_2x_dep(
         self, api_metadata: ApiMetadata, security_config_none: SecurityConfig
@@ -27,7 +23,7 @@ class TestRenderPyprojectTemplate:
         content = render_pyproject_template(
             api_metadata, security_config_none, "test_api", total_tools=5
         )
-        assert 'fastmcp>=2' not in content
+        assert "fastmcp>=2" not in content
 
     def test_project_name_sanitized(
         self, api_metadata: ApiMetadata, security_config_none: SecurityConfig
@@ -69,6 +65,7 @@ class TestRenderPyprojectTemplate:
 # ---------------------------------------------------------------------------
 # render_fastmcp_template
 # ---------------------------------------------------------------------------
+
 
 class TestRenderFastmcpTemplate:
     def test_returns_valid_json(

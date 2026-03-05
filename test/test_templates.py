@@ -81,3 +81,8 @@ class TestEventStoreTemplate:
     def test_has_cleanup_stream(self) -> None:
         code = generate_event_store()
         assert "def cleanup_stream" in code
+
+    def test_imports_streamid_and_eventid_types(self) -> None:
+        code = generate_event_store()
+        for type_name in ("EventCallback", "EventId", "EventMessage", "StreamId"):
+            assert type_name in code, f"Missing import for {type_name}"

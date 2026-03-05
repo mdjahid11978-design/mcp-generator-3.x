@@ -36,11 +36,23 @@ from typing import Dict, List
 
 try:
     # FastMCP 3.x+
-    from fastmcp.server.event_store import EventStore as _BaseEventStore
+    from fastmcp.server.event_store import (
+        EventStore as _BaseEventStore,
+        EventCallback,
+        EventId,
+        EventMessage,
+        StreamId,
+    )
     from mcp.types import JSONRPCMessage
 except ImportError:
     # Fallback for environments without FastMCP 3.x
-    from mcp.server.streamable_http import EventStore as _BaseEventStore
+    from mcp.server.streamable_http import (
+        EventStore as _BaseEventStore,
+        EventCallback,
+        EventId,
+        EventMessage,
+        StreamId,
+    )
     from mcp.types import JSONRPCMessage
 
 logger = logging.getLogger(__name__)

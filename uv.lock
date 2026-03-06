@@ -997,6 +997,7 @@ dev = [
     { name = "ruff" },
 ]
 docs = [
+    { name = "mkdocs" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-material" },
 ]
@@ -1022,6 +1023,7 @@ dev = [
     { name = "ruff", specifier = ">=0.8.4" },
 ]
 docs = [
+    { name = "mkdocs", specifier = ">=1.6.0,<2.0.0" },
     { name = "mkdocs-autorefs", specifier = ">=1.0.0" },
     { name = "mkdocs-material", specifier = ">=9.5.0" },
 ]

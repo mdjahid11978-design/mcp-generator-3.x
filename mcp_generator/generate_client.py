@@ -1,4 +1,4 @@
-﻿"""
+"""
 Pure Python OpenAPI client generator.
 
 Generates Python API stub classes directly from an OpenAPI spec, producing
@@ -58,7 +58,7 @@ def sanitize_pep440_version(version: str) -> str:
     if not m:
         return "0.0.0"
     base = m.group(1)
-    rest = version[m.end():]
+    rest = version[m.end() :]
 
     # Look for a pre-release tag like -alpha, -beta, -rc
     pre = re.match(r"[\-.]?(alpha|beta|rc|dev)(.*)", rest, re.IGNORECASE)
@@ -132,13 +132,15 @@ def extract_operations(spec: dict) -> dict[str, list[dict]]:
             # Extract parameters
             params = []
             for param in operation.get("parameters", []):
-                params.append({
-                    "name": param.get("name", ""),
-                    "in": param.get("in", "query"),
-                    "required": param.get("required", False),
-                    "schema": param.get("schema", {}),
-                    "description": param.get("description", ""),
-                })
+                params.append(
+                    {
+                        "name": param.get("name", ""),
+                        "in": param.get("in", "query"),
+                        "required": param.get("required", False),
+                        "schema": param.get("schema", {}),
+                        "description": param.get("description", ""),
+                    }
+                )
 
             # Extract request body
             request_body = operation.get("requestBody", {})
@@ -561,9 +563,7 @@ def generate_client_package(
     # API __init__.py
     api_init_lines = ["# flake8: noqa\n", "# import apis into api package\n"]
     for class_name, module_name in sorted(api_classes):
-        api_init_lines.append(
-            f"from openapi_client.api.{module_name} import {class_name}\n"
-        )
+        api_init_lines.append(f"from openapi_client.api.{module_name} import {class_name}\n")
     (api_dir / "__init__.py").write_text("".join(api_init_lines), encoding="utf-8")
 
     # Models __init__.py (stub - we generate stubs, not full models)
@@ -574,12 +574,8 @@ def generate_client_package(
 
     # Supporting modules
     (client_dir / "api_client.py").write_text(generate_api_client(), encoding="utf-8")
-    (client_dir / "api_response.py").write_text(
-        generate_api_response(), encoding="utf-8"
-    )
-    (client_dir / "configuration.py").write_text(
-        generate_configuration(), encoding="utf-8"
-    )
+    (client_dir / "api_response.py").write_text(generate_api_response(), encoding="utf-8")
+    (client_dir / "configuration.py").write_text(generate_configuration(), encoding="utf-8")
     (client_dir / "exceptions.py").write_text(generate_exceptions(), encoding="utf-8")
 
     # Main __init__.py
@@ -601,9 +597,7 @@ def generate_client_package(
         "# import apis into sdk package\n",
     ]
     for class_name, module_name in sorted(api_classes):
-        init_lines.append(
-            f"from openapi_client.api.{module_name} import {class_name}\n"
-        )
+        init_lines.append(f"from openapi_client.api.{module_name} import {class_name}\n")
     (client_dir / "__init__.py").write_text("".join(init_lines), encoding="utf-8")
 
     # pyproject.toml (so it's installable)
@@ -620,10 +614,7 @@ requires-python = ">=3.11"
     (output_dir / "pyproject.toml").write_text(pyproject, encoding="utf-8")
 
     total_methods = sum(len(ops) for ops in operations_by_tag.values())
-    print(
-        f"   \u2705 Generated {len(api_classes)} API classes "
-        f"({total_methods} methods)"
-    )
+    print(f"   \u2705 Generated {len(api_classes)} API classes ({total_methods} methods)")
 
     return _verify_package(output_dir)
 
@@ -668,9 +659,7 @@ def _verify_package(output_dir: Path) -> bool:
             sig = inspect.signature(getattr(cls, methods[0]))
             doc = inspect.getdoc(getattr(cls, methods[0]))
             if sig and doc:
-                print(
-                    "   \u2705 Introspection verified (signatures + docstrings OK)"
-                )
+                print("   \u2705 Introspection verified (signatures + docstrings OK)")
 
         return True
 
@@ -688,15 +677,9 @@ def main() -> int:
     """CLI entry point for standalone usage."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Pure Python OpenAPI client generator"
-    )
-    parser.add_argument(
-        "spec", nargs="?", default="openapi.json", help="Path to OpenAPI spec"
-    )
-    parser.add_argument(
-        "--output-dir", type=Path, default=Path("generated_openapi")
-    )
+    parser = argparse.ArgumentParser(description="Pure Python OpenAPI client generator")
+    parser.add_argument("spec", nargs="?", default="openapi.json", help="Path to OpenAPI spec")
+    parser.add_argument("--output-dir", type=Path, default=Path("generated_openapi"))
     args = parser.parse_args()
 
     spec_path = Path(args.spec)

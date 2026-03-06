@@ -43,7 +43,7 @@ MCP Generator 3.1 is an advanced code generator that automatically creates FastM
 
 How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on GitHub:
 
-| Feature | [**MCP Generator 3.1**](https://github.com/quotentiroler/mcp-generator-3.x) (Py, 13★) | [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator) (TS, 529★) | [mcp-link](https://github.com/automation-ai-labs/mcp-link) (Go, 602★) | [openapi-mcp-codegen](https://github.com/cnoe-io/openapi-mcp-codegen) (Py, 33★) | [openapi-mcp-generator](https://github.com/abutbul/openapi-mcp-generator) (Py, 28★) |
+| Feature | [**MCP Generator 3.1**](https://github.com/quotentiroler/mcp-generator-3.x) (Py, 13★) | [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator) (TS, 531★) | [mcp-link](https://github.com/automation-ai-labs/mcp-link) (Go, 602★) | [openapi-mcp-codegen](https://github.com/cnoe-io/openapi-mcp-codegen) (Py, 33★) | [openapi-mcp-generator](https://github.com/abutbul/openapi-mcp-generator) (Py, 28★) |
 |---|---|---|---|---|---|
 | **Approach** | Code generation | Code generation | Runtime proxy | Code generation | Code generation |
 | **OpenAPI 3.0** | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -55,7 +55,7 @@ How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on Gi
 | **JWT / JWKS auth** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **OAuth2 flows** | ✅ | env vars only | ❌ | ❌ | ❌ |
 | **Middleware stack** | ✅ (timing, logging, cache, auth) | ❌ | ❌ | ❌ | ❌ |
-| **MCP Resources** | ✅ (GET endpoints) | ❌ | ❌ | ❌ | ❌ |
+| **MCP Resources** | ✅ (GET endpoints) | ❌ | ❌ | ❌ | ✅ |
 | **Event Store** | ✅ (resumable) | ❌ | ❌ | ❌ | ❌ |
 | **Auto-generated tests** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Docker output** | ✅ | ❌ | ❌ | ❌ | ✅ |
@@ -64,7 +64,7 @@ How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on Gi
 | **Pure Python** | ✅ (zero external deps) | ❌ (Node.js) | ❌ (Go binary) | ✅ | ✅ |
 | **Schema validation** | Pydantic | Zod | ❌ | ❌ | ❌ |
 
-> **Note**: [mcpo](https://github.com/open-webui/mcpo) (4,022★) solves the **inverse** problem — exposing MCP servers as OpenAPI endpoints — and is complementary rather than competitive.
+> **Note**: [mcpo](https://github.com/open-webui/mcpo) (4,027★) solves the **inverse** problem — exposing MCP servers as OpenAPI endpoints — and is complementary rather than competitive.
 
 ---
 

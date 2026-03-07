@@ -106,6 +106,14 @@ jobs:
         enable-cache: true
         cache-dependency-glob: "**/pyproject.toml"
 
+    - name: Install Node.js (for OpenAPI Generator)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install OpenAPI Generator CLI
+      run: npm install -g @openapitools/openapi-generator-cli
+
     - name: Install dependencies
       run: uv sync --group dev
 

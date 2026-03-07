@@ -110,3 +110,66 @@ npx @modelcontextprotocol/inspector \
   -e BACKEND_API_TOKEN=your-token \
   python server_mcp_generated.py
 ```
+
+## MultiAuth (FastMCP 3.1)
+
+Compose multiple token verifiers for complex authentication scenarios:
+
+```json
+{
+  "features": {
+    "multi_auth": {
+      "enabled": true,
+      "providers": [
+        {"type": "jwt", "name": "internal"},
+        {"type": "oauth2", "name": "third_party"}
+      ]
+    }
+  }
+}
+```
+
+Use cases:
+
+- Accept both internal JWTs and third-party OAuth tokens
+- Support multiple identity providers
+- Graceful migration between auth systems
+
+The generated `create_multi_auth_verifier()` function composes verifiers using FastMCP's `MultiAuth`:
+
+```python
+from fastmcp.server.auth import MultiAuth
+
+verifier = create_multi_auth_verifier(config["providers"])
+# Returns MultiAuth(verifiers=[jwt_verifier, oauth_verifier, ...])
+```
+
+## Dynamic Component Visibility (FastMCP 3.0)
+
+Per-session component toggling based on user scopes/roles:
+
+```json
+{
+  "features": {
+    "dynamic_visibility": {
+      "enabled": true
+    }
+  }
+}
+```
+
+When enabled, the authentication middleware can show/hide tools based on the authenticated user's permissions:
+
+```python
+# In authentication middleware (on_request)
+if "admin" in scopes:
+    ctx.enable_components(["admin_tools"])
+else:
+    ctx.disable_components(["admin_tools"])
+```
+
+This allows:
+
+- Role-based tool visibility
+- Feature flags per user
+- Graceful capability degradation

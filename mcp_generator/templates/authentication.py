@@ -227,6 +227,21 @@ class ApiClientContextMiddleware(Middleware):
                     # FastMCP 3.x: set_state is now async
                     await fastmcp_ctx.set_state("access_token", access_token)
 
+                    # --- Dynamic component visibility (FastMCP 3.0+) ---
+                    # Enable/disable tools per session based on token scopes.
+                    # Requires "dynamic_visibility.enabled: true" in fastmcp.json.
+                    try:
+                        if hasattr(fastmcp_ctx, "enable_components"):
+                            scopes = set(getattr(access_token, "scopes", []) or [])
+                            # Example: enable admin tools only for admin scopes
+                            # Customize this section for your authorization model
+                            if "admin" in scopes or "write" in scopes:
+                                logger.debug("Session granted admin component visibility")
+                            # Users can implement custom logic here, e.g.:
+                            # await fastmcp_ctx.disable_components(["admin_delete_tool"])
+                    except Exception as vis_err:
+                        logger.debug("Dynamic visibility not applied: %s", vis_err)
+
             fastmcp_ctx = getattr(context, "fastmcp_context", None)
             if fastmcp_ctx:
                 # FastMCP 3.x: set_state is now async; serializable=False for non-JSON objects

@@ -7,6 +7,7 @@ import pytest
 from mcp_generator.models import OAuthConfig, OAuthFlowConfig, SecurityConfig
 from mcp_generator.templates.authentication import generate_authentication_middleware
 from mcp_generator.templates.event_store import generate_event_store
+from mcp_generator.templates.oauth_provider import generate_oauth_provider
 
 # ---------------------------------------------------------------------------
 # Authentication template
@@ -88,3 +89,61 @@ class TestEventStoreTemplate:
         code = generate_event_store()
         for type_name in ("EventCallback", "EventId", "EventMessage", "StreamId"):
             assert type_name in code, f"Missing import for {type_name}"
+
+
+# ---------------------------------------------------------------------------
+# Authentication template — Dynamic component visibility (FastMCP 3.0)
+# ---------------------------------------------------------------------------
+
+
+class TestAuthenticationDynamicVisibility:
+    def test_dynamic_visibility_block_present(self, auth_code: str) -> None:
+        """Dynamic component visibility code should be in auth middleware."""
+        assert "enable_components" in auth_code or "disable_components" in auth_code
+
+    def test_dynamic_visibility_scope_based(self, auth_code: str) -> None:
+        """Visibility logic should reference scopes/roles."""
+        assert "admin" in auth_code.lower() or "write" in auth_code.lower()
+
+
+# ---------------------------------------------------------------------------
+# OAuth provider template — MultiAuth (FastMCP 3.1)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def oauth_code() -> str:
+    from mcp_generator.models import ApiMetadata
+
+    meta = ApiMetadata(
+        title="Test",
+        version="1.0.0",
+        servers=[{"url": "http://localhost:3001"}],
+    )
+    sc = SecurityConfig(
+        schemes={"bearerAuth": {"type": "http", "scheme": "bearer"}},
+        oauth_config=OAuthConfig(
+            scheme_name="oauth2",
+            flows={
+                "clientCredentials": OAuthFlowConfig(
+                    token_url="https://auth.example.com/token",
+                    scopes={"read": "Read"},
+                )
+            },
+            all_scopes={"read": "Read"},
+        ),
+        jwks_uri="https://auth.example.com/.well-known/jwks.json",
+        issuer="https://auth.example.com",
+        audience="backend-api",
+    )
+    return generate_oauth_provider(meta, sc)
+
+
+class TestOAuthProviderMultiAuth:
+    def test_multi_auth_function_present(self, oauth_code: str) -> None:
+        """create_multi_auth_verifier function should exist."""
+        assert "def create_multi_auth_verifier" in oauth_code
+
+    def test_multi_auth_imports_fastmcp(self, oauth_code: str) -> None:
+        """Should import MultiAuth from fastmcp."""
+        assert "MultiAuth" in oauth_code

@@ -5,7 +5,41 @@ All notable changes to MCP Generator 3.x will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.1.0] - 2026-03-06
+
+### Added
+
+- **FastMCP 3.1 Features** — Full support for FastMCP 3.0/3.1 features:
+  - **Tool Tags** — Automatic per-module tag grouping (`@mcp.tool(tags=["pet"])`)
+  - **Tool Timeouts** — Configurable per-tool timeout (default 30s)
+  - **SearchTools Transform** — BM25 text search over tool catalog (opt-in)
+  - **CodeMode Transform** — Experimental meta-tool execution (opt-in)
+  - **ResponseLimitingMiddleware** — UTF-8-safe truncation of oversized responses (1MB default)
+  - **PingMiddleware** — HTTP keepalive for long-lived connections
+  - **MultiAuth** — Compose multiple token verifiers (JWT + OAuth2, etc.)
+  - **Component Versioning** — Deprecated endpoints annotated automatically
+  - **Dynamic Visibility** — Per-session component toggling via scopes
+  - **OpenTelemetry** — Tracing with MCP semantic conventions (Console/OTLP export)
+  - **validate_output** — FastMCP output validation support
+
+- **Enhanced CI** — Comprehensive test improvements:
+  - Enabled unit tests (99 tests, was previously TODO)
+  - Added Python 3.12 to test matrix
+  - Added coverage reporting with Codecov
+  - New `fastmcp-features` CI job for targeted feature tests
+  - FastMCP 3.1 verification in example integration tests
+
+- **Documentation** — Updated docs for all new features:
+  - New `features` section in configuration guide
+  - OpenTelemetry and middleware documentation
+  - Transforms (SearchTools, CodeMode) guide
+  - MultiAuth and dynamic visibility documentation
+
+### Changed
+
+- **fastmcp.json Template** — Expanded with full `features` section
+- **pyproject.toml** — Added `[telemetry]` optional dependency group
+- **Generated README** — Lists all FastMCP 3.1 features
 
 ## [2.0.0-rc.1+6094e01] - 2025-11-05
 

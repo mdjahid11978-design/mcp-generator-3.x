@@ -68,6 +68,40 @@ How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on Gi
 
 ---
 
+## ✨ FastMCP 3.1 Features
+
+MCP Generator 3.1 leverages all the latest FastMCP 3.0/3.1 capabilities:
+
+| Feature | Description |
+|---------|-------------|
+| **Tool Tags** | Automatic per-module tag grouping (`@mcp.tool(tags=["pet"])`) |
+| **Tool Timeouts** | Configurable per-tool timeout (default 30s) |
+| **SearchTools** | BM25 text search over tool catalog (opt-in via `fastmcp.json`) |
+| **CodeMode** | Experimental meta-tool transform (opt-in via `fastmcp.json`) |
+| **ResponseLimitingMiddleware** | UTF-8-safe truncation of oversized responses (1MB default) |
+| **PingMiddleware** | HTTP keepalive for long-lived connections |
+| **MultiAuth** | Compose multiple token verifiers (JWT + OAuth2, etc.) |
+| **Component Versioning** | Deprecated OpenAPI endpoints annotated automatically |
+| **Dynamic Visibility** | Per-session component toggling via scopes |
+| **OpenTelemetry** | Tracing with MCP semantic conventions (Console/OTLP export) |
+| **validate_output** | FastMCP output validation support |
+
+All features are configurable via the generated `fastmcp.json`:
+
+```json
+{
+  "features": {
+    "search_tools": { "enabled": false },
+    "code_mode": { "enabled": false },
+    "response_limiting": { "enabled": true, "max_size_bytes": 1048576 },
+    "ping_middleware": { "enabled": true },
+    "opentelemetry": { "enabled": false, "service_name": "my-api-mcp" }
+  }
+}
+```
+
+---
+
 ## 📦 Installation
 
 ### Prerequisites

@@ -110,15 +110,26 @@ def render_fastmcp_template(api_metadata, security_config, modules, total_tools,
     template_path = Path(__file__).parent / "templates" / "fastmcp_template.json"
     with open(template_path, encoding="utf-8") as f:
         template = f.read()
+
+    # Build service name from API title
+    import re
+
+    clean_title = re.sub(r"\s+v?\d+\.\d+(\.\d+)?", "", api_metadata.title, flags=re.IGNORECASE)
+    service_name = clean_title.lower().replace(" ", "-").replace("_", "-")
+    service_name = re.sub(r"-+", "-", service_name).strip("-")
+
     # Simple replacements for demonstration; expand as needed
     return (
         template.replace("{{composition_strategy}}", "mount")
         .replace("{{resource_prefix_format}}", "path")
         .replace("{{validate_tokens}}", "false")
+        .replace("{{service_name}}", f"{service_name}-mcp")
     )
 
 
-def generate_tool_for_method(api_var_name: str, method_name: str, method) -> str:
+def generate_tool_for_method(
+    api_var_name: str, method_name: str, method, tag_name: str = "", default_timeout: int | None = 30, validate_output: bool | None = None
+) -> str:
     """Generate MCP tool function for a single API method."""
     # Skip internal methods
     if (
@@ -131,6 +142,14 @@ def generate_tool_for_method(api_var_name: str, method_name: str, method) -> str
     tool_spec = _build_tool_spec(api_var_name, method_name, method)
     if not tool_spec:
         return ""
+
+    # Set tag and timeout from module-level context
+    if tag_name:
+        tool_spec.tags = [tag_name]
+    if default_timeout is not None:
+        tool_spec.timeout = default_timeout
+    if validate_output is not None:
+        tool_spec.validate_output = validate_output
 
     return _render_tool(tool_spec)
 
@@ -189,6 +208,13 @@ def _build_tool_spec(api_var_name: str, method_name: str, method) -> ToolSpec | 
 
     has_pydantic = any(p.is_pydantic for p in parameters)
 
+    # Detect deprecated status from method docstring or annotations
+    is_deprecated = False
+    if doc and ("deprecated" in doc.lower()):
+        is_deprecated = True
+    if hasattr(method, "__deprecated__"):
+        is_deprecated = True
+
     return ToolSpec(
         tool_name=tool_name,
         method_name=method_name,
@@ -196,6 +222,7 @@ def _build_tool_spec(api_var_name: str, method_name: str, method) -> ToolSpec | 
         parameters=parameters,
         docstring=enhanced_doc,
         has_pydantic_params=has_pydantic,
+        deprecated=is_deprecated,
     )
 
 
@@ -265,8 +292,25 @@ def _render_tool(spec: ToolSpec) -> str:
         model_names = [p.pydantic_class.__name__ for p in pydantic_params]
         model_imports = f"\n        from generated_openapi.openapi_client.models import {', '.join(set(model_names))}"
 
+    # Build @mcp.tool() decorator with optional kwargs
+    tool_decorator_kwargs = []
+    if spec.tags:
+        tags_str = ", ".join([f'"{t}"' for t in spec.tags])
+        tool_decorator_kwargs.append(f"tags=[{tags_str}]")
+    if spec.timeout is not None:
+        tool_decorator_kwargs.append(f"timeout={spec.timeout}")
+    if spec.deprecated:
+        tool_decorator_kwargs.append('version="deprecated"')
+    if spec.validate_output is not None:
+        tool_decorator_kwargs.append(f"validate_output={spec.validate_output}")
+
+    if tool_decorator_kwargs:
+        decorator = f"@mcp.tool({', '.join(tool_decorator_kwargs)})"
+    else:
+        decorator = "@mcp.tool"
+
     code = f'''
-@mcp.tool
+{decorator}
 async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
     """
     {spec.docstring}
@@ -515,7 +559,8 @@ async def {spec.resource_name}_resource({", ".join(func_params)}) -> str:
 
 
 def generate_server_module(
-    api_var_name: str, api_class, resource_endpoints: list[dict[str, Any]] | None = None
+    api_var_name: str, api_class, resource_endpoints: list[dict[str, Any]] | None = None,
+    validate_output: bool | None = None,
 ) -> ModuleSpec:
     """Generate a single server module for one API class.
 
@@ -523,6 +568,7 @@ def generate_server_module(
         api_var_name: API instance variable name (e.g., 'pet_api')
         api_class: API class from generated OpenAPI client
         resource_endpoints: Optional list of GET endpoints to generate as resources
+        validate_output: FastMCP 3.1 validate_output flag (None = server default)
     """
     api_class_name = api_class.__name__
     module_name = api_var_name.replace("_api", "").title().replace("_", "")
@@ -586,6 +632,8 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
 '''
 
     # Generate tools for this API
+    # Derive tag name from api_var_name (e.g., 'pet_api' -> 'pet')
+    tag_name = api_var_name.replace("_api", "")
     tool_count = 0
     for method_name in dir(api_class):
         if method_name.startswith("_"):
@@ -595,7 +643,10 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
         if not callable(method):
             continue
 
-        tool_code = generate_tool_for_method(api_var_name, method_name, method)
+        tool_code = generate_tool_for_method(
+            api_var_name, method_name, method, tag_name=tag_name,
+            validate_output=validate_output,
+        )
         if tool_code:
             code += tool_code
             tool_count += 1
@@ -641,4 +692,5 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
         tool_count=tool_count,
         code=code,
         resource_count=resource_count,
+        tag_name=tag_name,
     )

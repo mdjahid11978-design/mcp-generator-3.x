@@ -50,6 +50,21 @@ app.mount(user_mcp, namespace="user")
 
 This keeps each module focused and independently maintainable.
 
+### Tool Tags and Timeouts
+
+Generated tools automatically include FastMCP 3.1 features:
+
+```python
+@mcp.tool(tags=["pet"], timeout=30)
+async def list_pets(ctx: Context, limit: str | None = None) -> dict[str, Any]:
+    """List all pets in the store."""
+    ...
+```
+
+- **Tags** — derived from the API tag (e.g., `pet_api` → `["pet"]`)
+- **Timeouts** — configurable per-tool (default 30s)
+- **Deprecated detection** — endpoints marked deprecated in OpenAPI get `version="deprecated"`
+
 ### Tag Auto-Discovery
 
 If your OpenAPI spec has endpoints without explicit tags, the generator **automatically infers tags** from the URL path structure. For example, `/api/v1/users/{id}` gets tagged as `users`.
@@ -62,6 +77,47 @@ The generated code targets FastMCP 3.x directly:
 - `http_app()` for Streamable HTTP transport
 - Built-in `EventStore` for SSE resumability
 - Native middleware pipeline
+- Transforms pipeline (SearchTools, CodeMode)
+
+### Transforms (FastMCP 3.1)
+
+The generated server supports FastMCP 3.1 transforms — pipeline components that modify tool presentation:
+
+#### SearchTools
+
+BM25 text search over tool names and descriptions. Useful for servers with many tools:
+
+```json
+{
+  "features": {
+    "search_tools": {
+      "enabled": true
+    }
+  }
+}
+```
+
+When enabled, LLMs can search for relevant tools by name/description before listing the full catalog.
+
+#### CodeMode (Experimental)
+
+Replaces the full tool catalog with three meta-tools:
+
+1. **search** — find relevant tools by keyword
+2. **inspect** — get detailed tool schema
+3. **execute** — run a tool by name
+
+```json
+{
+  "features": {
+    "code_mode": {
+      "enabled": true
+    }
+  }
+}
+```
+
+CodeMode is experimental and useful for very large tool catalogs where full enumeration is impractical.
 
 ### Transport Modes
 

@@ -190,3 +190,61 @@ class TestGenerateMainCompositionServer:
         assert "ErrorHandlingMiddleware" in code
         assert "DetailedTimingMiddleware" in code
         assert "LoggingMiddleware" in code
+
+    # --- FastMCP 3.1 features ---
+
+    def test_response_limiting_middleware_import(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "ResponseLimitingMiddleware" in code
+
+    def test_ping_middleware_import(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "PingMiddleware" in code
+
+    def test_search_tools_transform_section(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "SearchTools" in code
+
+    def test_code_mode_transform_section(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "CodeMode" in code
+
+    def test_features_config_loading(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "_features_config" in code
+        assert "fastmcp.json" in code
+
+    def test_transforms_passed_to_fastmcp(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "transforms=_transforms" in code
+
+    def test_opentelemetry_section(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "TracerProvider" in code
+        assert "OTEL_EXPORTER_OTLP_ENDPOINT" in code
+
+    def test_dynamic_visibility_section(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "dynamic_visibility" in code
+
+    def test_multi_auth_import_with_auth(
+        self, api_metadata: ApiMetadata, security_config_bearer: SecurityConfig, _two_modules: dict
+    ) -> None:
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
+        assert "create_multi_auth_verifier" in code

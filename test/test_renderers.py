@@ -86,3 +86,54 @@ class TestRenderFastmcpTemplate:
             api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
         )
         assert '"mount"' in content
+
+    def test_features_section_present(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        parsed = json.loads(content)
+        assert "features" in parsed
+
+    def test_feature_keys_complete(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """All 11 FastMCP 3.0/3.1 feature keys exist in the template."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        features = json.loads(content)["features"]
+        expected_keys = {
+            "tool_tags", "tool_timeouts", "search_tools", "code_mode",
+            "response_limiting", "ping_middleware", "multi_auth",
+            "component_versioning", "validate_output", "dynamic_visibility",
+            "opentelemetry",
+        }
+        assert expected_keys.issubset(set(features.keys()))
+
+    def test_opentelemetry_service_name_rendered(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """service_name placeholder should be replaced with API title."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        otel = json.loads(content)["features"]["opentelemetry"]
+        assert "{{service_name}}" not in otel.get("service_name", "")
+        assert api_metadata.title.lower().replace(" ", "-") in otel["service_name"]
+
+    def test_telemetry_optional_dep_in_pyproject(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig
+    ) -> None:
+        content = render_pyproject_template(
+            api_metadata, security_config_none, "test_api", total_tools=1
+        )
+        assert "opentelemetry-api" in content
+        assert "opentelemetry-sdk" in content

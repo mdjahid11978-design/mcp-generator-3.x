@@ -32,13 +32,25 @@ MCP Generator automatically creates **modular, composable MCP servers** from Ope
 
     ---
 
-    JWT/JWKS validation, OAuth2 flows, scope enforcement — all generated automatically.
+    JWT/JWKS validation, OAuth2 flows, MultiAuth composition, scope enforcement.
 
 -   :material-layers:{ .lg .middle } **Middleware Stack**
 
     ---
 
-    Timing, logging, caching, error handling — full FastMCP 3.x middleware pipeline.
+    Error handling, timing, logging, response limiting, ping keepalive — full FastMCP 3.x pipeline.
+
+-   :material-magnify:{ .lg .middle } **SearchTools & CodeMode**
+
+    ---
+
+    FastMCP 3.1 transforms: BM25 tool discovery and experimental meta-tool execution.
+
+-   :material-chart-timeline:{ .lg .middle } **OpenTelemetry**
+
+    ---
+
+    Built-in tracing with MCP semantic conventions — Console or OTLP export.
 
 -   :material-test-tube:{ .lg .middle } **Auto-Generated Tests**
 
@@ -52,11 +64,11 @@ MCP Generator automatically creates **modular, composable MCP servers** from Ope
 
     Dockerfile and docker-compose generated for instant containerized deployment.
 
--   :material-language-python:{ .lg .middle } **Pure Python**
+-   :material-tag-multiple:{ .lg .middle } **Tool Tags & Timeouts**
 
     ---
 
-    Zero external runtime dependencies — no Java, no Node.js, just Python.
+    Automatic per-module tags, configurable timeouts, deprecated endpoint detection.
 
 </div>
 

@@ -975,7 +975,7 @@ wheels = [
 
 [[package]]
 name = "mcp-generator"
-version = "3.1.0rc4"
+version = "3.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },

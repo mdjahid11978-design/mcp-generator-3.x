@@ -34,6 +34,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/49
 
 
+
+- 🔧 Chores & Improvements: Sync version bumps and metadata after staging merge; ensure develop remains ahead of staging
+- 🐛 Bug Fixes: Fix version bump propagation to develop and correct repo name for release checks
+- 📚 Documentation: Update CHANGELOG.md references for previous PRs
+- ⚠️ Breaking Changes: None detected for this pre-release
+
+Notes:
+- Includes: bump to 3.1.1-beta, sync back to develop, prevent revert of version bumps on merges, and changelog diff improvements.
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/50
+
+
 ## [3.1.0] - 2026-03-06
 
 ### Added

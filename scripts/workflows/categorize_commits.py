@@ -22,7 +22,7 @@ def categorize_commits(input_file: str = "commit_messages.txt", output_file: str
         print(f"❌ Input file not found: {input_file}", file=sys.stderr)
         sys.exit(1)
 
-    with open(input_path, "r", encoding="utf-8") as f:
+    with open(input_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:

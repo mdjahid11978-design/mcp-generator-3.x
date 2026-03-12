@@ -9,7 +9,9 @@ import sys
 from pathlib import Path
 
 
-def categorize_commits(input_file: str = "commit_messages.txt", output_file: str = "changelog_entry.txt") -> None:
+def categorize_commits(
+    input_file: str = "commit_messages.txt", output_file: str = "changelog_entry.txt"
+) -> None:
     """Categorize commits from input file and write changelog entry."""
     features = []
     fixes = []
@@ -84,7 +86,9 @@ def categorize_commits(input_file: str = "commit_messages.txt", output_file: str
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(changelog)
 
-    print(f"✅ Categorized {len(features)} features, {len(fixes)} fixes, {len(docs)} docs, {len(chores)} chores, {len(others)} others")
+    print(
+        f"✅ Categorized {len(features)} features, {len(fixes)} fixes, {len(docs)} docs, {len(chores)} chores, {len(others)} others"
+    )
 
 
 if __name__ == "__main__":

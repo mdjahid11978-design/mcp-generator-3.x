@@ -5,6 +5,47 @@ All notable changes to MCP Generator 3.x will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1-beta+d025b9d] - 2026-03-12
+
+### Changed
+
+- Dependencies updated
+
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements:
+  - Sync main into develop and prepare staging (pre-release 3.1.1-beta)
+  - Resolve merge conflicts and keep 3.1.1-alpha version
+  - Update changelog formatting for version bumps
+  - Update version metadata
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/47
+
+
+
+- 🔧 Chores & Improvements: CI/CD and internal maintenance
+- 🐛 Bug Fixes: Corrected repo name for release check (mcp-generator-2.0 vs mcp-generator-3.x)
+- 📚 Documentation: Update CHANGELOG references and PR notes
+- ⚠️ Breaking Changes: None detected
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/49
+
+
+
+- 🔧 Chores & Improvements: Sync version bumps and metadata after staging merge; ensure develop remains ahead of staging
+- 🐛 Bug Fixes: Fix version bump propagation to develop and correct repo name for release checks
+- 📚 Documentation: Update CHANGELOG.md references for previous PRs
+- ⚠️ Breaking Changes: None detected for this pre-release
+
+Notes:
+- Includes: bump to 3.1.1-beta, sync back to develop, prevent revert of version bumps on merges, and changelog diff improvements.
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/50
+
+
 ## [3.1.0] - 2026-03-06
 
 ### Added

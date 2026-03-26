@@ -61,7 +61,7 @@ def render_pyproject_template(
 
     # Build dependencies list
     dependencies = [
-        "fastmcp>=3.0.0,<4.0.0",
+        "fastmcp>=3.1.0,<4.0.0",
         "httpx>=0.23.0",
         "pydantic>=2.0.0,<3.0.0",
         "python-dateutil>=2.8.2",
@@ -277,9 +277,12 @@ def _render_tool(spec: ToolSpec) -> str:
             model_class_name = param.pydantic_class.__name__
             param_conversion_code += f"""
         # Convert JSON string to Pydantic model
-        import json
-        {param.name}_data = json.loads({param.name}) if isinstance({param.name}, str) else {param.name}
-        {param.name}_obj = {model_class_name}(**{param.name}_data)
+        try:
+            import json
+            {param.name}_data = json.loads({param.name}) if isinstance({param.name}, str) else {param.name}
+            {param.name}_obj = {model_class_name}(**{param.name}_data)
+        except Exception as e:
+            raise _ParameterValidationError(f"Invalid JSON parameter '{param.name}': {{str(e)}}") from e
 """
 
     # Build method call arguments - use converted objects for Pydantic params
@@ -295,7 +298,7 @@ def _render_tool(spec: ToolSpec) -> str:
     model_imports = ""
     if pydantic_params:
         model_names = [p.pydantic_class.__name__ for p in pydantic_params]
-        model_imports = f"\n        from generated_openapi.openapi_client.models import {', '.join(set(model_names))}"
+        model_imports = f"\n        from openapi_client.models import {', '.join(set(model_names))}"
 
     # Build @mcp.tool() decorator with optional kwargs
     tool_decorator_kwargs = []
@@ -329,6 +332,8 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
         openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
+        if not hasattr(openapi_client, 'configuration'):
+            raise Exception(f"API client is not valid — expected ApiClient, got {{type(openapi_client).__name__}}.")
 
         apis = _get_api_instances(openapi_client)
         {spec.api_var_name} = apis['{spec.api_var_name}']{model_imports}{param_conversion_code}
@@ -337,44 +342,81 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
         await ctx.debug(f"Calling API: {spec.method_name}")
         response = {spec.api_var_name}.{spec.method_name}({call_args})
 
+        # Guard against accidentally-async API clients returning coroutines
+        if asyncio.iscoroutine(response):
+            response = await response
+
         # Convert response to dict - handle various response types
         if response is None:
             result = None
         elif hasattr(response, 'to_dict') and callable(response.to_dict):
             # Pydantic model with to_dict method
-            result = response.to_dict()
+            try:
+                result = response.to_dict()
+            except Exception:
+                result = str(response)
         elif isinstance(response, list):
             # List of items - convert each if possible
             result = []
             for item in response:
                 if hasattr(item, 'to_dict') and callable(item.to_dict):
-                    result.append(item.to_dict())
+                    try:
+                        result.append(item.to_dict())
+                    except Exception:
+                        result.append(str(item))
                 else:
                     result.append(item)
         elif isinstance(response, tuple):
             # Tuple response (some APIs return tuples)
             result = list(response) if response else []
+        elif isinstance(response, bytes):
+            # Binary response - decode to string
+            result = response.decode('utf-8', errors='replace')
         elif isinstance(response, (dict, str, int, float, bool)):
             # Primitive types or already a dict
             result = response
+        elif hasattr(response, '__next__') or hasattr(response, '__aiter__'):
+            # Generator or async iterator - materialise to list
+            items = list(response) if hasattr(response, '__next__') else response
+            result = []
+            for item in items:
+                if hasattr(item, 'to_dict') and callable(item.to_dict):
+                    try:
+                        result.append(item.to_dict())
+                    except Exception:
+                        result.append(str(item))
+                else:
+                    result.append(item)
+        elif hasattr(response, 'isoformat') and callable(response.isoformat):
+            # datetime/date/time objects — convert to ISO format string
+            result = response.isoformat()
         else:
             # Fallback: try to convert to dict or use as-is
             try:
                 result = dict(response) if hasattr(response, '__dict__') else response
-            except:
+            except Exception:
                 result = str(response)
 
         # Log successful completion
         await ctx.info(f"✅ {spec.tool_name} completed successfully")
         return {{"result": result}}
 
+    except _ParameterValidationError as e:
+        await ctx.error(f"Parameter error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(str(e))
     except ApiException as e:
         error_msg = _format_api_error(e)
         await ctx.error(f"API error in {spec.tool_name}: {{error_msg}}")
         raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})")
+    except ConnectionError as e:
+        await ctx.error(f"Connection error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(f"Connection error: could not reach the API backend. {{str(e)}}")
+    except TimeoutError as e:
+        await ctx.error(f"Timeout error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(f"Timeout error: the API request timed out. {{str(e)}}")
     except Exception as e:
         await ctx.error(f"Unexpected error in {spec.tool_name}: {{str(e)}}")
-        raise Exception(f"Unexpected error: {{str(e)}}")
+        raise Exception(f"Unexpected error in {spec.tool_name}: {{str(e)}}")
 '''
 
     return code
@@ -534,12 +576,18 @@ async def {spec.resource_name}_resource({", ".join(func_params)}) -> str:
         openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
+        if not isinstance(openapi_client, ApiClient):
+            raise Exception(f"API client is not valid — expected ApiClient, got {{type(openapi_client).__name__}}.")
 
         apis = _get_api_instances(openapi_client)
         {spec.api_var_name} = apis['{spec.api_var_name}']
 
         # Call API method
         response = {spec.api_var_name}.{spec.method_name}({call_args})
+
+        # Guard against accidentally-async API clients returning coroutines
+        if asyncio.iscoroutine(response):
+            response = await response
 
         # Convert response to JSON string
         if response is None:
@@ -588,6 +636,7 @@ Auto-generated from {api_class_name}.
 DO NOT EDIT MANUALLY - regenerate using: python src/mcp_generator.py
 """
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
@@ -631,6 +680,11 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
     return {{
         '{api_var_name}': {api_class_name}(openapi_client)
     }}
+
+
+class _ParameterValidationError(Exception):
+    """Raised when a tool parameter cannot be parsed from JSON."""
+    pass
 
 
 # Generated tool functions

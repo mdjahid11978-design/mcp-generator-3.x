@@ -80,11 +80,14 @@ def generate_main_composition_server(
       - ``InMemoryEventStore`` → ``EventStore`` from ``fastmcp.server.event_store``
 
     FastMCP 3.1 features (generated when enabled in fastmcp.json):
-      - ``SearchTools`` transform for BM25 tool discovery
+      - ``BM25SearchTransform`` for BM25 tool discovery
       - ``CodeMode`` experimental transform for meta-tool execution
+      - ``VersionFilter`` transform with ``include_unversioned`` support
       - ``ResponseLimitingMiddleware`` for safe response truncation
       - ``PingMiddleware`` for HTTP keepalive
       - ``MultiAuth`` for composing multiple token verifiers
+      - ``PropelAuth`` as built-in auth provider option
+      - ``search_result_serializer`` hook for custom search output
       - Component versioning via ``version=`` on ``@mcp.tool()``
       - Tool tags via ``tags=`` on ``@mcp.tool()``
       - Tool timeouts via ``timeout=`` on ``@mcp.tool()``
@@ -171,7 +174,7 @@ from middleware.authentication import ApiClientContextMiddleware
     auth_validation = ""
 
     if security_config.has_authentication():
-        auth_imports += """from middleware.oauth_provider import create_jwt_verifier, build_authentication_stack, RequireScopesMiddleware, create_multi_auth_verifier
+        auth_imports += """from middleware.oauth_provider import create_jwt_verifier, build_authentication_stack, RequireScopesMiddleware, create_multi_auth_verifier, create_propelauth_provider
 """
         auth_argparse = """
     parser.add_argument(
@@ -196,8 +199,30 @@ from middleware.authentication import ApiClientContextMiddleware
             logger.info("  🔧 ASGI Middleware: Authentication (JWT validation) at HTTP layer")
             logger.info("  🔑 JWT validation: Enabled via Starlette auth backend + scope guard")
 
-            # Create JWT verifier for token validation
-            jwt_verifier = create_jwt_verifier()
+            # Check if MultiAuth is configured (FastMCP 3.1)
+            _multi_auth_cfg = _features_config.get("multi_auth", {})
+            _propelauth_cfg = _features_config.get("propelauth", {})
+            jwt_verifier = None
+
+            if _propelauth_cfg.get("enabled", False):
+                # Use PropelAuth as the authentication provider
+                propelauth_provider = create_propelauth_provider(_propelauth_cfg)
+                if propelauth_provider:
+                    logger.info("  🔐 PropelAuth provider configured")
+                    # PropelAuth acts as both auth provider and verifier
+                    jwt_verifier = propelauth_provider
+
+            if jwt_verifier is None and _multi_auth_cfg.get("enabled", False):
+                # MultiAuth: compose multiple token verifiers
+                multi_auth = create_multi_auth_verifier(_multi_auth_cfg.get("providers", []))
+                if multi_auth:
+                    jwt_verifier = multi_auth
+                    logger.info("  🔐 MultiAuth verifier configured with %d providers", len(_multi_auth_cfg.get("providers", [])) + 1)
+
+            if jwt_verifier is None:
+                # Fallback: single JWT verifier
+                jwt_verifier = create_jwt_verifier()
+
             if jwt_verifier:
                 asgi_middleware = build_authentication_stack(jwt_verifier, require_auth=True)
 
@@ -250,6 +275,12 @@ try:
 except ImportError:
     PingMiddleware = None  # FastMCP <3.0
 
+# FastMCP 3.1 VersionFilter import
+try:
+    from fastmcp.server.transforms import VersionFilter
+except ImportError:
+    VersionFilter = None  # FastMCP <3.1
+
 # Add the src folder and generated folder to the Python path
 src_path = Path(__file__).parent
 generated_path = src_path.parent / "generated_openapi"
@@ -282,11 +313,36 @@ _transforms = []
 _search_tools_cfg = _features_config.get("search_tools", {{}})
 if _search_tools_cfg.get("enabled", False):
     try:
-        from fastmcp.transforms import SearchTools
-        _transforms.append(SearchTools())
-        logger.info("  🔍 SearchTools transform enabled (BM25 tool discovery)")
+        from fastmcp.server.transforms.search import BM25SearchTransform
+        _search_kwargs = {{}}
+        # Custom search result serializer (FastMCP 3.1)
+        _serializer_cfg = _search_tools_cfg.get("serializer")
+        if _serializer_cfg == "markdown":
+            from fastmcp.server.transforms.search import serialize_tools_for_output_markdown
+            _search_kwargs["search_result_serializer"] = serialize_tools_for_output_markdown
+        elif _serializer_cfg == "json":
+            from fastmcp.server.transforms.search import serialize_tools_for_output_json
+            _search_kwargs["search_result_serializer"] = serialize_tools_for_output_json
+        _transforms.append(BM25SearchTransform(**_search_kwargs))
+        logger.info("  🔍 BM25SearchTransform enabled (BM25 tool discovery)")
     except ImportError:
-        logger.warning("  ⚠️ SearchTools not available (requires fastmcp>=3.1)")
+        logger.warning("  ⚠️ BM25SearchTransform not available (requires fastmcp>=3.1)")
+
+# VersionFilter: Filter components by version (FastMCP 3.1)
+_version_filter_cfg = _features_config.get("version_filter", {{}})
+if _version_filter_cfg.get("enabled", False):
+    try:
+        from fastmcp.server.transforms import VersionFilter as _VF
+        _vf_kwargs = {{}}
+        if "version_gte" in _version_filter_cfg:
+            _vf_kwargs["version_gte"] = _version_filter_cfg["version_gte"]
+        if "version_lt" in _version_filter_cfg:
+            _vf_kwargs["version_lt"] = _version_filter_cfg["version_lt"]
+        _vf_kwargs["include_unversioned"] = _version_filter_cfg.get("include_unversioned", True)
+        _transforms.append(_VF(**_vf_kwargs))
+        logger.info("  📦 VersionFilter transform enabled (include_unversioned=%s)", _vf_kwargs["include_unversioned"])
+    except ImportError:
+        logger.warning("  ⚠️ VersionFilter not available (requires fastmcp>=3.1)")
 
 # CodeMode: Experimental meta-tool transform (search → inspect → execute)
 _code_mode_cfg = _features_config.get("code_mode", {{}})

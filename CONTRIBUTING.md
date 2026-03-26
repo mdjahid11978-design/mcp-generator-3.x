@@ -24,14 +24,14 @@ Thank you for your interest in contributing to MCP Generator 3.x! This document 
 1. **Fork the repository**
    ```bash
    # Click "Fork" on GitHub, then clone your fork
-   git clone https://github.com/YOUR_USERNAME/mcp-generator-2.0.git
-   cd mcp-generator-2.0
+   git clone https://github.com/YOUR_USERNAME/mcp-generator-3.x.git
+   cd mcp-generator-3.x
    ```
 
 2. **Add upstream remote**
    ```bash
    # Add the original repository as upstream
-   git remote add upstream https://github.com/quotentiroler/mcp-generator-2.0.git
+   git remote add upstream https://github.com/quotentiroler/mcp-generator-3.x.git
    ```
 
 3. **Install dependencies**

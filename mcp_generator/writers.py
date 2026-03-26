@@ -491,6 +491,11 @@ def write_test_files(
     oauth_persistence_test_code: str | None,
     test_dir: Path,
     resource_test_code: str | None = None,
+    transform_test_code: str | None = None,
+    multi_auth_test_code: str | None = None,
+    server_integration_test_code: str | None = None,
+    tool_schema_test_code: str | None = None,
+    behavioral_test_code: str | None = None,
 ) -> None:
     """
     Write generated test files to the filesystem.
@@ -505,6 +510,11 @@ def write_test_files(
         oauth_persistence_test_code: Generated OAuth persistence tests (None if storage not enabled with auth)
         test_dir: Directory to write test files to
         resource_test_code: Generated resource template tests (None if resources not enabled)
+        transform_test_code: Generated transform tests (FastMCP 3.1 features)
+        multi_auth_test_code: Generated multi-auth tests (FastMCP 3.1 features, None if no auth)
+        server_integration_test_code: Generated in-process integration tests
+        tool_schema_test_code: Generated tool schema validation tests
+        behavioral_test_code: Generated behavioural edge-case tests (expected to fail initially)
     """
     test_dir.mkdir(parents=True, exist_ok=True)
 
@@ -562,6 +572,41 @@ def write_test_files(
         with open(resource_file, "w", encoding="utf-8") as f:
             f.write(resource_test_code)
         print("   ✅ test_resources_generated.py")
+
+    # Write transform tests (FastMCP 3.1)
+    if transform_test_code:
+        transform_file = test_dir / "test_transforms_generated.py"
+        with open(transform_file, "w", encoding="utf-8") as f:
+            f.write(transform_test_code)
+        print("   ✅ test_transforms_generated.py")
+
+    # Write multi-auth tests (FastMCP 3.1)
+    if multi_auth_test_code:
+        multi_auth_file = test_dir / "test_multi_auth_generated.py"
+        with open(multi_auth_file, "w", encoding="utf-8") as f:
+            f.write(multi_auth_test_code)
+        print("   ✅ test_multi_auth_generated.py")
+
+    # Write server integration tests (in-process, no HTTP needed)
+    if server_integration_test_code:
+        integration_file = test_dir / "test_server_integration_generated.py"
+        with open(integration_file, "w", encoding="utf-8") as f:
+            f.write(server_integration_test_code)
+        print("   ✅ test_server_integration_generated.py")
+
+    # Write tool schema validation tests
+    if tool_schema_test_code:
+        schema_file = test_dir / "test_tool_schemas_generated.py"
+        with open(schema_file, "w", encoding="utf-8") as f:
+            f.write(tool_schema_test_code)
+        print("   ✅ test_tool_schemas_generated.py")
+
+    # Write behavioral edge-case tests
+    if behavioral_test_code:
+        behavioral_file = test_dir / "test_behavioral_generated.py"
+        with open(behavioral_file, "w", encoding="utf-8") as f:
+            f.write(behavioral_test_code)
+        print("   ✅ test_behavioral_generated.py")
 
 
 def write_test_runner(test_runner_code: str, output_file: Path) -> None:

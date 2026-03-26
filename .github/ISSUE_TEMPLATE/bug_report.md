@@ -45,7 +45,7 @@ Or link to a public spec that demonstrates the issue.
 
 - **OS**: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
 - **Python Version**: [e.g., 3.11.5]
-- **MCP Generator Version**: [e.g., 0.1.0]
+- **MCP Generator Version**: [e.g., 3.1.1]
 - **OpenAPI Generator Version**: [e.g., 7.10.0]
 - **Installation Method**: [uv, pip, git clone]
 

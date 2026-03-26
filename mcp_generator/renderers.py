@@ -61,7 +61,7 @@ def render_pyproject_template(
 
     # Build dependencies list
     dependencies = [
-        "fastmcp>=3.0.0,<4.0.0",
+        "fastmcp>=3.1.0,<4.0.0",
         "httpx>=0.23.0",
         "pydantic>=2.0.0,<3.0.0",
         "python-dateutil>=2.8.2",
@@ -112,11 +112,9 @@ def render_fastmcp_template(api_metadata, security_config, modules, total_tools,
         template = f.read()
 
     # Build service name from API title
-    import re
+    from .utils import sanitize_server_name
 
-    clean_title = re.sub(r"\s+v?\d+\.\d+(\.\d+)?", "", api_metadata.title, flags=re.IGNORECASE)
-    service_name = clean_title.lower().replace(" ", "-").replace("_", "-")
-    service_name = re.sub(r"-+", "-", service_name).strip("-")
+    service_name = sanitize_server_name(api_metadata.title).replace("_", "-")
 
     # Simple replacements for demonstration; expand as needed
     return (
@@ -277,9 +275,12 @@ def _render_tool(spec: ToolSpec) -> str:
             model_class_name = param.pydantic_class.__name__
             param_conversion_code += f"""
         # Convert JSON string to Pydantic model
-        import json
-        {param.name}_data = json.loads({param.name}) if isinstance({param.name}, str) else {param.name}
-        {param.name}_obj = {model_class_name}(**{param.name}_data)
+        try:
+            import json
+            {param.name}_data = json.loads({param.name}) if isinstance({param.name}, str) else {param.name}
+            {param.name}_obj = {model_class_name}(**{param.name}_data)
+        except Exception as e:
+            raise _ParameterValidationError(f"Invalid JSON parameter '{param.name}': {{str(e)}}") from e
 """
 
     # Build method call arguments - use converted objects for Pydantic params
@@ -295,7 +296,7 @@ def _render_tool(spec: ToolSpec) -> str:
     model_imports = ""
     if pydantic_params:
         model_names = [p.pydantic_class.__name__ for p in pydantic_params]
-        model_imports = f"\n        from generated_openapi.openapi_client.models import {', '.join(set(model_names))}"
+        model_imports = f"\n        from openapi_client.models import {', '.join(set(model_names))}"
 
     # Build @mcp.tool() decorator with optional kwargs
     tool_decorator_kwargs = []
@@ -314,6 +315,10 @@ def _render_tool(spec: ToolSpec) -> str:
     else:
         decorator = "@mcp.tool"
 
+    # Build list of required parameter names for elicitation
+    required_param_names = [p.name for p in spec.parameters if p.required]
+    required_params_literal = ", ".join([f'"{n}"' for n in required_param_names])
+
     code = f'''
 {decorator}
 async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
@@ -321,6 +326,22 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
     {spec.docstring}
     """
     try:
+        # Report progress: starting
+        await ctx.report_progress(0, 3, "Validating parameters...")
+
+        # --- Elicitation: ask user for missing required parameters ---
+        _required = [{required_params_literal}]
+        _locals = locals()
+        _missing = [p for p in _required if not _locals.get(p)]
+        if _missing:
+            try:
+                _elicit_msg = f"Missing required parameter(s) for {spec.tool_name}: {{', '.join(_missing)}}. Please provide values."
+                _elicit_resp = await ctx.elicit(_elicit_msg, None)
+                if hasattr(_elicit_resp, "action") and _elicit_resp.action != "accept":
+                    return {{"error": "User declined to provide required parameters"}}
+            except Exception:
+                pass  # Elicitation not supported by client — continue with what we have
+
         # Log tool execution start
         await ctx.info(f"Executing {spec.tool_name}...")
 
@@ -329,52 +350,110 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
         openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
+        if not hasattr(openapi_client, 'configuration'):
+            raise Exception(f"API client is not valid — expected ApiClient, got {{type(openapi_client).__name__}}.")
 
         apis = _get_api_instances(openapi_client)
         {spec.api_var_name} = apis['{spec.api_var_name}']{model_imports}{param_conversion_code}
 
-        # Log API call
+        # Report progress: calling API
+        await ctx.report_progress(1, 3, "Calling API...")
         await ctx.debug(f"Calling API: {spec.method_name}")
         response = {spec.api_var_name}.{spec.method_name}({call_args})
+
+        # Guard against accidentally-async API clients returning coroutines
+        if asyncio.iscoroutine(response):
+            response = await response
 
         # Convert response to dict - handle various response types
         if response is None:
             result = None
         elif hasattr(response, 'to_dict') and callable(response.to_dict):
             # Pydantic model with to_dict method
-            result = response.to_dict()
+            try:
+                result = response.to_dict()
+            except Exception:
+                result = str(response)
         elif isinstance(response, list):
             # List of items - convert each if possible
             result = []
             for item in response:
                 if hasattr(item, 'to_dict') and callable(item.to_dict):
-                    result.append(item.to_dict())
+                    try:
+                        result.append(item.to_dict())
+                    except Exception:
+                        result.append(str(item))
                 else:
                     result.append(item)
         elif isinstance(response, tuple):
             # Tuple response (some APIs return tuples)
             result = list(response) if response else []
+        elif isinstance(response, bytes):
+            # Binary response - decode to string
+            result = response.decode('utf-8', errors='replace')
         elif isinstance(response, (dict, str, int, float, bool)):
             # Primitive types or already a dict
             result = response
+        elif hasattr(response, '__next__') or hasattr(response, '__aiter__'):
+            # Generator or async iterator - materialise to list
+            items = list(response) if hasattr(response, '__next__') else response
+            result = []
+            for item in items:
+                if hasattr(item, 'to_dict') and callable(item.to_dict):
+                    try:
+                        result.append(item.to_dict())
+                    except Exception:
+                        result.append(str(item))
+                else:
+                    result.append(item)
+        elif hasattr(response, 'isoformat') and callable(response.isoformat):
+            # datetime/date/time objects — convert to ISO format string
+            result = response.isoformat()
         else:
             # Fallback: try to convert to dict or use as-is
             try:
                 result = dict(response) if hasattr(response, '__dict__') else response
-            except:
+            except Exception:
                 result = str(response)
+
+        # Report progress: processing response
+        await ctx.report_progress(2, 3, "Processing response...")
 
         # Log successful completion
         await ctx.info(f"✅ {spec.tool_name} completed successfully")
+        await ctx.report_progress(3, 3, "Done")
         return {{"result": result}}
 
+    except _ParameterValidationError as e:
+        await ctx.error(f"Parameter error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(str(e))
     except ApiException as e:
         error_msg = _format_api_error(e)
         await ctx.error(f"API error in {spec.tool_name}: {{error_msg}}")
-        raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})")
+        # --- Sampling: ask LLM to suggest a fix for API errors ---
+        try:
+            _sample_result = await ctx.sample(
+                f"The API call '{spec.tool_name}' failed with: {{error_msg}} (status {{e.status}}). "
+                f"Suggest what the user should do to fix this.",
+                system_prompt="You are a helpful API debugging assistant. Be concise.",
+                max_tokens=200,
+            )
+            _suggestion = _sample_result.result if hasattr(_sample_result, 'result') else str(_sample_result)
+            raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})\\n💡 Suggestion: {{_suggestion}}")
+        except Exception as _sample_err:
+            if "API Error:" in str(_sample_err):
+                raise
+            raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})")
+    except ConnectionError as e:
+        await ctx.error(f"Connection error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(f"Connection error: could not reach the API backend. {{str(e)}}")
+    except TimeoutError as e:
+        await ctx.error(f"Timeout error in {spec.tool_name}: {{str(e)}}")
+        raise Exception(f"Timeout error: the API request timed out. {{str(e)}}")
     except Exception as e:
         await ctx.error(f"Unexpected error in {spec.tool_name}: {{str(e)}}")
-        raise Exception(f"Unexpected error: {{str(e)}}")
+        raise Exception(f"Unexpected error in {spec.tool_name}: {{str(e)}}")
+
 '''
 
     return code
@@ -534,12 +613,18 @@ async def {spec.resource_name}_resource({", ".join(func_params)}) -> str:
         openapi_client = await ctx.get_state('openapi_client')
         if not openapi_client:
             raise Exception("API client not available. Authentication middleware may not be configured.")
+        if not isinstance(openapi_client, ApiClient):
+            raise Exception(f"API client is not valid — expected ApiClient, got {{type(openapi_client).__name__}}.")
 
         apis = _get_api_instances(openapi_client)
         {spec.api_var_name} = apis['{spec.api_var_name}']
 
         # Call API method
         response = {spec.api_var_name}.{spec.method_name}({call_args})
+
+        # Guard against accidentally-async API clients returning coroutines
+        if asyncio.iscoroutine(response):
+            response = await response
 
         # Convert response to JSON string
         if response is None:
@@ -568,6 +653,7 @@ def generate_server_module(
     api_class,
     resource_endpoints: list[dict[str, Any]] | None = None,
     validate_output: bool | None = None,
+    exclude_methods: set[str] | None = None,
 ) -> ModuleSpec:
     """Generate a single server module for one API class.
 
@@ -576,6 +662,8 @@ def generate_server_module(
         api_class: API class from generated OpenAPI client
         resource_endpoints: Optional list of GET endpoints to generate as resources
         validate_output: FastMCP 3.1 validate_output flag (None = server default)
+        exclude_methods: Method names already generated by earlier modules (first-tag-wins dedup).
+            Any method in this set is skipped, and newly generated methods are added to it.
     """
     api_class_name = api_class.__name__
     module_name = api_var_name.replace("_api", "").title().replace("_", "")
@@ -588,6 +676,7 @@ Auto-generated from {api_class_name}.
 DO NOT EDIT MANUALLY - regenerate using: python src/mcp_generator.py
 """
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
@@ -633,6 +722,11 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
     }}
 
 
+class _ParameterValidationError(Exception):
+    """Raised when a tool parameter cannot be parsed from JSON."""
+    pass
+
+
 # Generated tool functions
 # ============================================================================
 
@@ -650,6 +744,10 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
         if not callable(method):
             continue
 
+        # First-tag-wins dedup: skip methods already generated by an earlier module
+        if exclude_methods is not None and method_name in exclude_methods:
+            continue
+
         tool_code = generate_tool_for_method(
             api_var_name,
             method_name,
@@ -660,6 +758,9 @@ def _get_api_instances(openapi_client: ApiClient) -> dict:
         if tool_code:
             code += tool_code
             tool_count += 1
+            # Record this method so later modules skip it
+            if exclude_methods is not None:
+                exclude_methods.add(method_name)
 
     # Generate resource templates if requested
     resource_count = 0

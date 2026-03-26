@@ -10,17 +10,24 @@ from pathlib import Path
 
 from .models import ApiMetadata, ModuleSpec, SecurityConfig
 from .templates.test.test_auth_flows import generate_auth_flow_tests as _generate_auth_flows
+from .templates.test.test_behavioral import generate_behavioral_tests as _generate_behavioral
 from .templates.test.test_cache import generate_cache_tests as _generate_cache
 from .templates.test.test_e2e_http_basic import generate_http_basic_tests as _generate_http_basic
 from .templates.test.test_e2e_openapi_features import (
     generate_openapi_feature_tests as _generate_openapi_features,
 )
 from .templates.test.test_e2e_performance import generate_performance_tests as _generate_performance
+from .templates.test.test_multi_auth import generate_multi_auth_tests as _generate_multi_auth
 from .templates.test.test_oauth_persistence import (
     generate_oauth_persistence_tests as _generate_oauth_persistence,
 )
 from .templates.test.test_resources import generate_resource_tests as _generate_resources
+from .templates.test.test_server_integration import (
+    generate_server_integration_tests as _generate_server_integration,
+)
+from .templates.test.test_tool_schemas import generate_tool_schema_tests as _generate_tool_schemas
 from .templates.test.test_tools import generate_tool_tests as _generate_tools
+from .templates.test.test_transforms import generate_transform_tests as _generate_transforms
 
 
 def _load_openapi_spec() -> dict:
@@ -262,3 +269,104 @@ def generate_resource_tests(
         str: Test file content for resource template validation (RFC 6570 URIs)
     """
     return _generate_resources(modules, api_metadata, security_config)
+
+
+def generate_transform_tests(
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+    modules: dict[str, ModuleSpec],
+) -> str:
+    """Generate tests for FastMCP 3.1 transforms.
+
+    Args:
+        api_metadata: API metadata
+        security_config: Security configuration
+        modules: Generated server modules
+
+    Returns:
+        str: Test file content for transform validation
+    """
+    return _generate_transforms(api_metadata, security_config, modules)
+
+
+def generate_multi_auth_tests(
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+    modules: dict[str, ModuleSpec],
+) -> str:
+    """Generate tests for FastMCP 3.1 multi-auth features.
+
+    Args:
+        api_metadata: API metadata
+        security_config: Security configuration
+        modules: Generated server modules
+
+    Returns:
+        str: Test file content for multi-auth validation
+    """
+    return _generate_multi_auth(api_metadata, security_config, modules)
+
+
+def generate_server_integration_tests(
+    modules: dict[str, ModuleSpec],
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+) -> str:
+    """Generate in-process server integration tests.
+
+    These tests import generated server modules directly and use
+    fastmcp.Client for tool invocation without HTTP — no running
+    server needed.
+
+    Args:
+        modules: Generated server modules
+        api_metadata: API metadata
+        security_config: Security configuration
+
+    Returns:
+        str: Test file content for server integration
+    """
+    return _generate_server_integration(modules, api_metadata, security_config)
+
+
+def generate_tool_schema_tests(
+    modules: dict[str, ModuleSpec],
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+) -> str:
+    """Generate tool schema validation tests.
+
+    Cross-references MCP tool schemas against the OpenAPI spec to
+    detect parameter drift and mismatches.
+
+    Args:
+        modules: Generated server modules
+        api_metadata: API metadata
+        security_config: Security configuration
+
+    Returns:
+        str: Test file content for schema validation
+    """
+    return _generate_tool_schemas(modules, api_metadata, security_config)
+
+
+def generate_behavioral_tests(
+    modules: dict[str, ModuleSpec],
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+) -> str:
+    """Generate behavioural edge-case tests.
+
+    These tests probe runtime behaviours that may not work correctly
+    yet.  Some tests are expected to FAIL initially — each failure is
+    a concrete signal for an agent to fix the generated code.
+
+    Args:
+        modules: Generated server modules
+        api_metadata: API metadata
+        security_config: Security configuration
+
+    Returns:
+        str: Test file content for behavioural edge-case tests
+    """
+    return _generate_behavioral(modules, api_metadata, security_config)

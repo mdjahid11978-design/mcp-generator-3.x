@@ -4,7 +4,7 @@
 
 | Version       | Supported          | Status      |
 | ------------- | ------------------ | ----------- |
-| 2.0.0-alpha+c53f1ed   | :white_check_mark: | Pre-release |
+| 3.1.x         | :white_check_mark: | Active      |
 
 ## Reporting a Vulnerability
 
@@ -75,12 +75,10 @@ When using generated servers:
 ## Security Updates
 
 Security updates will be:
-- Released as patch versions (2.0.X) or pre-release updates (2.0.0-alpha.X)
+- Released as patch versions (3.1.X)
 - Documented in [CHANGELOG.md](CHANGELOG.md)
 - Announced via GitHub Security Advisories
 - Tagged with security labels in release notes
-
-**Note**: As we're currently in alpha pre-release (2.0.0-alpha), expect rapid updates and potential breaking changes. Production use is not recommended until stable 2.0.0 release.
 
 ## Scope
 
@@ -125,7 +123,7 @@ When deploying generated MCP servers:
 
 For security issues: maxivities@gmail.com
 
-For general support: [GitHub Issues](https://github.com/quotentiroler/mcp-generator-2.0/issues)
+For general support: [GitHub Issues](https://github.com/quotentiroler/mcp-generator-3.x/issues)
 
 ---
 

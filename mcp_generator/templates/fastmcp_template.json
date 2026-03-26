@@ -18,11 +18,19 @@
     },
     "search_tools": {
       "enabled": false,
-      "description": "Adds BM25 text search over tool names/descriptions for large catalogs"
+      "serializer": null,
+      "description": "Adds BM25 text search over tool names/descriptions for large catalogs. serializer: null | 'markdown' | 'json'"
     },
     "code_mode": {
       "enabled": false,
       "description": "Experimental: LLM gets meta-tools (search, inspect, execute) instead of full catalog"
+    },
+    "version_filter": {
+      "enabled": false,
+      "include_unversioned": true,
+      "version_gte": null,
+      "version_lt": null,
+      "description": "Filter tool catalog by component version. include_unversioned keeps tools without explicit versions."
     },
     "response_limiting": {
       "enabled": true,
@@ -33,10 +41,39 @@
       "enabled": true,
       "description": "Keepalive for long-lived HTTP connections"
     },
+    "rate_limiting": {
+      "enabled": false,
+      "max_requests_per_second": 10.0,
+      "burst_capacity": 20,
+      "global_limit": false,
+      "description": "Token-bucket rate limiting to prevent server abuse (per-client or global)"
+    },
     "multi_auth": {
       "enabled": false,
       "providers": [],
       "description": "Compose multiple token verifiers (e.g., internal JWTs + third-party OAuth)"
+    },
+    "propelauth": {
+      "enabled": false,
+      "auth_url": null,
+      "introspection_client_id": null,
+      "introspection_client_secret": null,
+      "base_url": null,
+      "required_scopes": null,
+      "description": "PropelAuth enterprise authentication provider (FastMCP 3.1)"
+    },
+    "oauth_proxy": {
+      "enabled": false,
+      "upstream_authorization_endpoint": null,
+      "upstream_token_endpoint": null,
+      "upstream_client_id": null,
+      "upstream_client_secret": null,
+      "upstream_revocation_endpoint": null,
+      "base_url": null,
+      "redirect_path": "/oauth/callback",
+      "valid_scopes": null,
+      "forward_pkce": true,
+      "description": "OAuthProxy bridges non-DCR IdPs (Auth0, Okta, Azure AD, Google) to MCP-compatible auth. Requires a pre-registered OAuth app with the upstream IdP."
     },
     "component_versioning": {
       "enabled": true,

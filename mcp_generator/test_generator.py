@@ -16,11 +16,13 @@ from .templates.test.test_e2e_openapi_features import (
     generate_openapi_feature_tests as _generate_openapi_features,
 )
 from .templates.test.test_e2e_performance import generate_performance_tests as _generate_performance
+from .templates.test.test_multi_auth import generate_multi_auth_tests as _generate_multi_auth
 from .templates.test.test_oauth_persistence import (
     generate_oauth_persistence_tests as _generate_oauth_persistence,
 )
 from .templates.test.test_resources import generate_resource_tests as _generate_resources
 from .templates.test.test_tools import generate_tool_tests as _generate_tools
+from .templates.test.test_transforms import generate_transform_tests as _generate_transforms
 
 
 def _load_openapi_spec() -> dict:
@@ -262,3 +264,39 @@ def generate_resource_tests(
         str: Test file content for resource template validation (RFC 6570 URIs)
     """
     return _generate_resources(modules, api_metadata, security_config)
+
+
+def generate_transform_tests(
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+    modules: dict[str, ModuleSpec],
+) -> str:
+    """Generate tests for FastMCP 3.1 transforms.
+
+    Args:
+        api_metadata: API metadata
+        security_config: Security configuration
+        modules: Generated server modules
+
+    Returns:
+        str: Test file content for transform validation
+    """
+    return _generate_transforms(api_metadata, security_config, modules)
+
+
+def generate_multi_auth_tests(
+    api_metadata: ApiMetadata,
+    security_config: SecurityConfig,
+    modules: dict[str, ModuleSpec],
+) -> str:
+    """Generate tests for FastMCP 3.1 multi-auth features.
+
+    Args:
+        api_metadata: API metadata
+        security_config: Security configuration
+        modules: Generated server modules
+
+    Returns:
+        str: Test file content for multi-auth validation
+    """
+    return _generate_multi_auth(api_metadata, security_config, modules)

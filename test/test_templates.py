@@ -147,3 +147,52 @@ class TestOAuthProviderMultiAuth:
     def test_multi_auth_imports_fastmcp(self, oauth_code: str) -> None:
         """Should import MultiAuth from fastmcp."""
         assert "MultiAuth" in oauth_code
+
+    def test_multi_auth_primary_verifier(self, oauth_code: str) -> None:
+        """MultiAuth should include the primary JWT verifier."""
+        assert "create_jwt_verifier()" in oauth_code
+
+    def test_multi_auth_additional_providers(self, oauth_code: str) -> None:
+        """MultiAuth should iterate over additional provider configs."""
+        assert "for prov in providers:" in oauth_code
+
+    def test_multi_auth_returns_multi_auth_instance(self, oauth_code: str) -> None:
+        """Should return MultiAuth(verifiers)."""
+        assert "MultiAuth(verifiers)" in oauth_code
+
+
+# ---------------------------------------------------------------------------
+# OAuth provider template — PropelAuth (FastMCP 3.1)
+# ---------------------------------------------------------------------------
+
+
+class TestOAuthProviderPropelAuth:
+    def test_propelauth_function_present(self, oauth_code: str) -> None:
+        """create_propelauth_provider function should exist."""
+        assert "def create_propelauth_provider" in oauth_code
+
+    def test_propelauth_imports_provider(self, oauth_code: str) -> None:
+        """Should import PropelAuthProvider from fastmcp."""
+        assert "PropelAuthProvider" in oauth_code
+
+    def test_propelauth_config_keys(self, oauth_code: str) -> None:
+        """Should read auth_url, introspection_client_id, introspection_client_secret."""
+        assert 'config.get("auth_url")' in oauth_code
+        assert 'config.get("introspection_client_id")' in oauth_code
+        assert 'config.get("introspection_client_secret")' in oauth_code
+
+    def test_propelauth_validates_required_fields(self, oauth_code: str) -> None:
+        """Should validate that required fields are present."""
+        assert "not all([auth_url, client_id, client_secret])" in oauth_code
+
+    def test_propelauth_returns_none_on_import_error(self, oauth_code: str) -> None:
+        """Should handle ImportError gracefully."""
+        assert "except ImportError" in oauth_code
+
+    def test_propelauth_passes_base_url(self, oauth_code: str) -> None:
+        """Should pass base_url to PropelAuthProvider."""
+        assert "base_url=base_url" in oauth_code
+
+    def test_propelauth_passes_required_scopes(self, oauth_code: str) -> None:
+        """Should pass required_scopes to PropelAuthProvider."""
+        assert "required_scopes=required_scopes" in oauth_code

@@ -18,11 +18,19 @@
     },
     "search_tools": {
       "enabled": false,
-      "description": "Adds BM25 text search over tool names/descriptions for large catalogs"
+      "serializer": null,
+      "description": "Adds BM25 text search over tool names/descriptions for large catalogs. serializer: null | 'markdown' | 'json'"
     },
     "code_mode": {
       "enabled": false,
       "description": "Experimental: LLM gets meta-tools (search, inspect, execute) instead of full catalog"
+    },
+    "version_filter": {
+      "enabled": false,
+      "include_unversioned": true,
+      "version_gte": null,
+      "version_lt": null,
+      "description": "Filter tool catalog by component version. include_unversioned keeps tools without explicit versions."
     },
     "response_limiting": {
       "enabled": true,
@@ -37,6 +45,15 @@
       "enabled": false,
       "providers": [],
       "description": "Compose multiple token verifiers (e.g., internal JWTs + third-party OAuth)"
+    },
+    "propelauth": {
+      "enabled": false,
+      "auth_url": null,
+      "introspection_client_id": null,
+      "introspection_client_secret": null,
+      "base_url": null,
+      "required_scopes": null,
+      "description": "PropelAuth enterprise authentication provider (FastMCP 3.1)"
     },
     "component_versioning": {
       "enabled": true,

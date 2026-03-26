@@ -18,12 +18,14 @@ from .test_generator import (
     generate_auth_flow_tests,
     generate_cache_tests,
     generate_http_basic_tests,
+    generate_multi_auth_tests,
     generate_oauth_persistence_tests,
     generate_openapi_feature_tests,
     generate_performance_tests,
     generate_resource_tests,
     generate_test_runner,
     generate_tool_tests,
+    generate_transform_tests,
 )
 from .writers import (
     write_main_server,
@@ -368,6 +370,16 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             print("   • Resource template tests")
             resource_test_code = generate_resource_tests(modules, api_metadata, security_config)
 
+        # Always generate transform tests (FastMCP 3.1 features)
+        print("   • FastMCP 3.1 transform tests")
+        transform_test_code = generate_transform_tests(api_metadata, security_config, modules)
+
+        # Generate multi-auth tests if auth is configured
+        multi_auth_test_code = None
+        if security_config.has_authentication():
+            print("   • FastMCP 3.1 multi-auth tests")
+            multi_auth_test_code = generate_multi_auth_tests(api_metadata, security_config, modules)
+
         if security_config.has_authentication():
             print("   • Authentication flow tests")
             auth_test_code = generate_auth_flow_tests(api_metadata, security_config, modules)
@@ -383,6 +395,8 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
                 oauth_persistence_test_code,
                 test_dir,
                 resource_test_code,
+                transform_test_code,
+                multi_auth_test_code,
             )
         else:
             print("   • Basic tool tests (no auth required)")
@@ -397,6 +411,8 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
                 oauth_persistence_test_code,
                 test_dir,
                 resource_test_code,
+                transform_test_code,
+                multi_auth_test_code,
             )
 
         # Generate test runner script

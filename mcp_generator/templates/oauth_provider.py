@@ -446,4 +446,57 @@ def create_multi_auth_verifier(
 
     logger.info("MultiAuth configured with %d token verifiers", len(verifiers))
     return MultiAuth(verifiers)
+
+
+def create_propelauth_provider(
+    config: dict | None = None,
+) -> Optional["PropelAuthProvider"]:
+    """Create a PropelAuth authentication provider.
+
+    PropelAuth provides enterprise-grade authentication with
+    built-in token introspection and user management.
+
+    Requires FastMCP >= 3.1.
+
+    Args:
+        config: PropelAuth configuration dict with keys:
+            - auth_url: PropelAuth API URL
+            - introspection_client_id: Client ID for token introspection
+            - introspection_client_secret: Client secret for introspection
+            - base_url: Base URL for the MCP server
+            - required_scopes: Optional list of required scopes
+
+    Returns:
+        PropelAuthProvider instance or None if not available/configured.
+    """
+    try:
+        from fastmcp.server.auth.providers.propelauth import PropelAuthProvider
+    except ImportError:
+        logger.warning("PropelAuth not available (requires fastmcp>=3.1)")
+        return None
+
+    config = config or {{}}
+    auth_url = config.get("auth_url")
+    client_id = config.get("introspection_client_id")
+    client_secret = config.get("introspection_client_secret")
+    base_url = config.get("base_url", BACKEND_API_URL)
+    required_scopes = config.get("required_scopes")
+
+    if not all([auth_url, client_id, client_secret]):
+        logger.error("PropelAuth requires auth_url, introspection_client_id, and introspection_client_secret")
+        return None
+
+    try:
+        provider = PropelAuthProvider(
+            auth_url=auth_url,
+            introspection_client_id=client_id,
+            introspection_client_secret=client_secret,
+            base_url=base_url,
+            required_scopes=required_scopes,
+        )
+        logger.info("PropelAuth provider configured: %s", auth_url)
+        return provider
+    except Exception as exc:
+        logger.error("Failed to create PropelAuth provider: %s", exc)
+        return None
 '''

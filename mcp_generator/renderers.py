@@ -61,7 +61,7 @@ def render_pyproject_template(
 
     # Build dependencies list
     dependencies = [
-        "fastmcp>=3.0.0,<4.0.0",
+        "fastmcp>=3.1.0,<4.0.0",
         "httpx>=0.23.0",
         "pydantic>=2.0.0,<3.0.0",
         "python-dateutil>=2.8.2",

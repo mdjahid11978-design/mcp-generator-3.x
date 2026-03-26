@@ -15,7 +15,7 @@ class TestRenderPyprojectTemplate:
         content = render_pyproject_template(
             api_metadata, security_config_none, "test_api", total_tools=5
         )
-        assert "fastmcp>=3.0.0,<4.0.0" in content
+        assert "fastmcp>=3.1.0,<4.0.0" in content
 
     def test_does_not_contain_fastmcp_2x_dep(
         self, api_metadata: ApiMetadata, security_config_none: SecurityConfig
@@ -122,6 +122,65 @@ class TestRenderFastmcpTemplate:
             "opentelemetry",
         }
         assert expected_keys.issubset(set(features.keys()))
+
+    def test_version_filter_in_features(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """version_filter key should be present in features."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        features = json.loads(content)["features"]
+        assert "version_filter" in features
+        vf = features["version_filter"]
+        assert "enabled" in vf
+        assert "include_unversioned" in vf
+        assert "version_gte" in vf
+        assert "version_lt" in vf
+
+    def test_propelauth_in_features(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """propelauth key should be present in features."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        features = json.loads(content)["features"]
+        assert "propelauth" in features
+        pa = features["propelauth"]
+        assert "enabled" in pa
+        assert "auth_url" in pa
+        assert "introspection_client_id" in pa
+        assert "introspection_client_secret" in pa
+
+    def test_search_tools_serializer_field(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """search_tools should have a serializer field."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        search = json.loads(content)["features"]["search_tools"]
+        assert "serializer" in search
+
+    def test_version_filter_defaults(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict
+    ) -> None:
+        """version_filter should default to disabled with include_unversioned=true."""
+        import json
+
+        content = render_fastmcp_template(
+            api_metadata, security_config_none, sample_modules, total_tools=5, server_name="test"
+        )
+        vf = json.loads(content)["features"]["version_filter"]
+        assert vf["enabled"] is False
+        assert vf["include_unversioned"] is True
 
     def test_opentelemetry_service_name_rendered(
         self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, sample_modules: dict

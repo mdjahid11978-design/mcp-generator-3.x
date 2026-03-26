@@ -248,3 +248,128 @@ class TestGenerateMainCompositionServer:
     ) -> None:
         code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
         assert "create_multi_auth_verifier" in code
+
+    # --- FastMCP 3.1 branch-level tests ---
+
+    def test_version_filter_transform_block(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """VersionFilter transform must appear in the generated code."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "VersionFilter" in code
+        assert "version_filter" in code
+        assert "include_unversioned" in code
+
+    def test_version_filter_import_fallback(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """VersionFilter import must have an ImportError fallback."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "from fastmcp.server.transforms import VersionFilter" in code
+        # Verify the fallback is present
+        assert "VersionFilter = None" in code
+
+    def test_version_filter_config_keys(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """VersionFilter should read version_gte, version_lt, include_unversioned from config."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert '"version_gte"' in code
+        assert '"version_lt"' in code
+        assert '"include_unversioned"' in code
+
+    def test_search_result_serializer_block(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """Generated code must support search result serializer selection."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "search_result_serializer" in code
+        assert "serialize_tools_for_output_markdown" in code
+        assert "serialize_tools_for_output_json" in code
+
+    def test_bm25_search_transform_import(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """SearchTools should use BM25SearchTransform from fastmcp 3.1."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "from fastmcp.server.transforms.search import BM25SearchTransform" in code
+        assert "BM25SearchTransform(" in code
+
+    def test_propelauth_block_in_auth(
+        self, api_metadata: ApiMetadata, security_config_bearer: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """PropelAuth provider should be wired into HTTP token validation."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
+        assert "create_propelauth_provider" in code
+        assert "propelauth" in code
+
+    def test_multi_auth_provider_composition(
+        self, api_metadata: ApiMetadata, security_config_bearer: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """MultiAuth should compose multiple providers with fallback to single JWT."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
+        # MultiAuth config block
+        assert "_multi_auth_cfg" in code
+        assert "_propelauth_cfg" in code
+        # Fallback path
+        assert "jwt_verifier = create_jwt_verifier()" in code
+        assert "jwt_verifier = None" in code
+
+    def test_multi_auth_provider_priority(
+        self, api_metadata: ApiMetadata, security_config_bearer: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """PropelAuth should be checked before MultiAuth, MultiAuth before single JWT."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
+        propelauth_pos = code.index("_propelauth_cfg.get(\"enabled\"")
+        multi_auth_pos = code.index("_multi_auth_cfg.get(\"enabled\"")
+        fallback_pos = code.index("jwt_verifier = create_jwt_verifier()")
+        assert propelauth_pos < multi_auth_pos < fallback_pos
+
+    def test_response_limiting_config_branch(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """ResponseLimitingMiddleware must read max_size_bytes from config."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "max_size_bytes" in code
+        assert "1_048_576" in code  # Default 1MB
+        assert "ResponseLimitingMiddleware(max_size=" in code
+
+    def test_ping_middleware_disabled_branch(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """PingMiddleware should check 'enabled' config key."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert '_ping_cfg.get("enabled"' in code
+
+    def test_code_mode_import_error_fallback(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """CodeMode import must have ImportError fallback."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "from fastmcp.experimental.transforms.code_mode import CodeMode" in code
+
+    def test_no_auth_no_propelauth_block(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """Without auth, PropelAuth and MultiAuth blocks should not appear."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "create_propelauth_provider" not in code
+        assert "create_multi_auth_verifier" not in code
+
+    def test_http_validation_uvicorn_path(
+        self, api_metadata: ApiMetadata, security_config_bearer: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """HTTP validation block should include uvicorn dispatch."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
+        assert "uvicorn.Config" in code
+        assert "uvicorn.Server" in code
+
+    def test_transforms_list_building(
+        self, api_metadata: ApiMetadata, security_config_none: SecurityConfig, _two_modules: dict
+    ) -> None:
+        """Transforms list should be built incrementally."""
+        code = generate_main_composition_server(_two_modules, api_metadata, security_config_none)
+        assert "_transforms = []" in code
+        assert "_transforms.append(BM25SearchTransform(" in code
+        assert "_transforms.append(CodeMode())" in code
+        assert "_transforms.append(_VF(" in code

@@ -42,6 +42,12 @@ def generate_modular_servers(
     servers: dict[str, ModuleSpec] = {}
     total_tools = 0
 
+    # Track method names already generated across modules to avoid duplicates.
+    # When an OpenAPI operation has multiple tags, openapi-generator places the
+    # same method on every corresponding API class.  We use first-tag-wins:
+    # the first module (alphabetical) that contains a method claims it.
+    seen_methods: set[str] = set()
+
     # Generate a server module for each API class. Key the resulting dict by
     # ModuleSpec.module_name (stable identifier) rather than filename to avoid
     # brittle filename-based lookups downstream.
@@ -53,7 +59,9 @@ def generate_modular_servers(
         tag_name = api_var_name.replace("_api", "")
         resource_endpoints = resources_by_tag.get(tag_name, [])
 
-        module_spec = generate_server_module(api_var_name, api_class, resource_endpoints)
+        module_spec = generate_server_module(
+            api_var_name, api_class, resource_endpoints, exclude_methods=seen_methods
+        )
         servers[module_spec.module_name] = module_spec
         total_tools += module_spec.tool_count
 

@@ -441,7 +441,7 @@ async def {spec.tool_name}({", ".join(func_params)}) -> dict[str, Any]:
                 max_tokens=200,
             )
             _suggestion = _sample_result.result if hasattr(_sample_result, 'result') else str(_sample_result)
-            raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})\n💡 Suggestion: {{_suggestion}}")
+            raise Exception(f"API Error: {{error_msg}} (status: {{e.status}})\\n💡 Suggestion: {{_suggestion}}")
         except Exception as _sample_err:
             if "API Error:" in str(_sample_err):
                 raise

@@ -270,7 +270,6 @@ class TestGeneratedToolFeatures:
     @pytest.fixture
     def tool_code_required_params(self) -> str:
         """Generate a tool with required parameters for elicitation testing."""
-        import inspect
 
         def add_pet(name: str, status: str) -> dict:
             """Add a new pet."""

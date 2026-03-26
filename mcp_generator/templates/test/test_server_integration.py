@@ -57,11 +57,6 @@ def generate_server_integration_tests(
     tool_check_block = "\n".join(module_tool_checks)
     metadata_check_block = "\n".join(module_metadata_checks)
 
-    # First tool name for call_tool test
-    first_mod_name = sorted(modules.keys())[0]
-    first_spec = modules[first_mod_name]
-    first_server_module = first_spec.filename.replace(".py", "")
-
     return f'''"""
 Generated Server Integration Tests for {api_metadata.title}
 

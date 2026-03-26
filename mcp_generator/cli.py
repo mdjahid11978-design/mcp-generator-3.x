@@ -16,6 +16,7 @@ from .templates.oauth_provider import generate_oauth_provider
 from .templates.storage_backend import generate_storage_backend
 from .test_generator import (
     generate_auth_flow_tests,
+    generate_behavioral_tests,
     generate_cache_tests,
     generate_http_basic_tests,
     generate_multi_auth_tests,
@@ -25,7 +26,6 @@ from .test_generator import (
     generate_resource_tests,
     generate_server_integration_tests,
     generate_test_runner,
-    generate_behavioral_tests,
     generate_tool_schema_tests,
     generate_tool_tests,
     generate_transform_tests,

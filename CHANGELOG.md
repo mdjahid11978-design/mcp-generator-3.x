@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Dependencies updated
 
+
+- ✨ Features: FastMCP 3.1 features — RateLimiting, OAuthProxy, progress/elicitation/sampling, SSRF protection
+  - Add RateLimitingMiddleware (token-bucket) with configurable max_rps, burst, global_limit
+  - Add OAuthProxy for bridging non-DCR IdPs (Auth0, Okta, Azure AD) to MCP auth
+  - Add ctx.report_progress() calls
+
+- 🔧 Chores & Improvements: Code quality and test/template enhancements
+  - Various tests/templates and code quality improvements (camel_to_snake updates, tag handling, sys.path setup, server name sanitization, Ruff lint fixes, formatting)
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/54
+
+
 ## [3.1.1-beta+d025b9d] - 2026-03-12
 
 ### Changed

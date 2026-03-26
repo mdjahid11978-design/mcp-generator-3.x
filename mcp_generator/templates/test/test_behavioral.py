@@ -84,6 +84,7 @@ import asyncio
 import inspect
 import json
 import sys
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -140,6 +141,28 @@ class MockContext:
         pass
 
 
+class FakeApi:
+    """API mock whose every method returns / raises a configured value.
+
+    Unlike ``MagicMock``, Python allows setting ``__getattr__`` on
+    regular classes, so this avoids the "unsupported magic method" error.
+    """
+
+    def __init__(self, *, side_effect=None, return_value=None):
+        self._side_effect = side_effect
+        self._return_value = return_value
+
+    def __getattr__(self, name: str):
+        if self._side_effect is not None:
+            def _method(*args, **kwargs):
+                raise self._side_effect
+            return _method
+        else:
+            def _method(*args, **kwargs):
+                return self._return_value
+            return _method
+
+
 # =========================================================================
 # Runtime tool discovery
 # =========================================================================
@@ -185,6 +208,9 @@ def _discover_pydantic_tools() -> list[tuple[str, str, Any, FastMCP]]:
 PYDANTIC_TOOLS = _discover_pydantic_tools()
 PYDANTIC_TOOL_IDS = [f"{{mod}}/{{name}}" for mod, name, _, _ in PYDANTIC_TOOLS]
 
+NON_PYDANTIC_TOOLS = [t for t in ALL_TOOLS if t not in PYDANTIC_TOOLS]
+NON_PYDANTIC_TOOL_IDS = [f"{{mod}}/{{name}}" for mod, name, _, _ in NON_PYDANTIC_TOOLS]
+
 
 def _minimal_args(fn) -> dict[str, str]:
     """Build minimal keyword arguments for *fn* — every parameter
@@ -195,6 +221,15 @@ def _minimal_args(fn) -> dict[str, str]:
         for p in sig.parameters.values()
         if p.name != "ctx"
     }}
+
+
+def _make_api_dict(fake_api):
+    """Return a defaultdict that maps every key to *fake_api*.
+
+    ``_get_api_instances`` returns a plain dict like
+    ``{{'pet_api': PetApi(client)}}``.  We replace it with a defaultdict
+    so whatever key the tool looks up, it gets our fake."""
+    return defaultdict(lambda: fake_api)
 
 
 # =========================================================================
@@ -368,19 +403,15 @@ class TestResponseNormalisation:
     def _make_ctx(self):
         """Factory for a MockContext whose API method returns a given value."""
         def _factory(api_response):
-            mock_api = MagicMock()
-            # Make every attribute / method return` api_response`
-            mock_api.__getattr__ = lambda self, name: (
-                lambda *a, **kw: api_response
-            )
+            fake_api = FakeApi(return_value=api_response)
             mock_client = MagicMock()
             return MockContext(state={{"openapi_client": mock_client}}), mock_client, api_response
         return _factory
 
     @pytest.mark.parametrize(
         "mod_name, tool_name, tool_fn, mcp_inst",
-        ALL_TOOLS[:1],  # test with first tool as representative
-        ids=ALL_TOOL_IDS[:1],
+        NON_PYDANTIC_TOOLS[:1],  # representative non-Pydantic tool
+        ids=NON_PYDANTIC_TOOL_IDS[:1],
     )
     @pytest.mark.asyncio
     async def test_datetime_response_is_serialisable(
@@ -394,35 +425,18 @@ class TestResponseNormalisation:
         fallback branch which calls ``str(response)`` but the test
         verifies the full ``{{"result": ...}}`` dict is serialisable.
         """
-        # We patch _get_api_instances so the API method returns a datetime
         now = datetime(2025, 1, 15, 12, 0, 0)
         mock_client = MagicMock()
-
-        # Build a fake API dict that returns `now` for any method call
-        fake_api = MagicMock()
-        fake_api.__getattr__ = MagicMock(return_value=lambda *a, **kw: now)
-        # The specific api var (e.g. pet_api) should return our fake
-        fake_apis = MagicMock()
-        fake_apis.__getitem__ = MagicMock(return_value=fake_api)
-
-        ctx = MockContext(state={{"openapi_client": mock_client}})
-        args = _minimal_args(tool_fn)
-
-        server_module_name = f"servers.{{mod_name}}_server"
-        with patch.dict(
-            sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: {{k: fake_api for k in ["dummy"]}}}},
-        ):
-            # We can't easily patch the exact api var name, so instead
-            # we exercise the response-normalisation path directly.
-            pass
 
         # Direct normalisation test (mirrors generated code)
         response = now
         if response is None:
             result = None
         elif hasattr(response, "to_dict") and callable(response.to_dict):
-            result = response.to_dict()
+            try:
+                result = response.to_dict()
+            except Exception:
+                result = str(response)
         elif isinstance(response, list):
             result = [
                 item.to_dict() if hasattr(item, "to_dict") and callable(item.to_dict) else item
@@ -430,8 +444,14 @@ class TestResponseNormalisation:
             ]
         elif isinstance(response, tuple):
             result = list(response) if response else []
+        elif isinstance(response, bytes):
+            result = response.decode("utf-8", errors="replace")
         elif isinstance(response, (dict, str, int, float, bool)):
             result = response
+        elif hasattr(response, "__next__"):
+            result = list(response)
+        elif hasattr(response, "isoformat") and callable(response.isoformat):
+            result = response.isoformat()
         else:
             try:
                 result = dict(response) if hasattr(response, "__dict__") else response
@@ -462,13 +482,20 @@ class TestResponseNormalisation:
         if response is None:
             result = None
         elif hasattr(response, "to_dict") and callable(response.to_dict):
-            result = response.to_dict()
+            try:
+                result = response.to_dict()
+            except Exception:
+                result = str(response)
         elif isinstance(response, list):
             result = list(response)
         elif isinstance(response, tuple):
             result = list(response) if response else []
+        elif isinstance(response, bytes):
+            result = response.decode("utf-8", errors="replace")
         elif isinstance(response, (dict, str, int, float, bool)):
             result = response
+        elif hasattr(response, "__next__"):
+            result = list(response)
         else:
             try:
                 result = dict(response) if hasattr(response, "__dict__") else response
@@ -524,13 +551,20 @@ class TestResponseNormalisation:
         if response is None:
             result = None
         elif hasattr(response, "to_dict") and callable(response.to_dict):
-            result = response.to_dict()
+            try:
+                result = response.to_dict()
+            except Exception:
+                result = str(response)
         elif isinstance(response, list):
             result = list(response)
         elif isinstance(response, tuple):
             result = list(response) if response else []
+        elif isinstance(response, bytes):
+            result = response.decode("utf-8", errors="replace")
         elif isinstance(response, (dict, str, int, float, bool)):
             result = response
+        elif hasattr(response, "__next__"):
+            result = list(response)
         else:
             try:
                 result = dict(response) if hasattr(response, "__dict__") else response
@@ -587,8 +621,8 @@ class TestErrorMessageQuality:
 
     @pytest.mark.parametrize(
         "mod_name, tool_name, tool_fn, mcp_inst",
-        ALL_TOOLS,
-        ids=ALL_TOOL_IDS,
+        NON_PYDANTIC_TOOLS,
+        ids=NON_PYDANTIC_TOOL_IDS,
     )
     @pytest.mark.asyncio
     async def test_connection_error_mentions_connectivity(
@@ -605,17 +639,11 @@ class TestErrorMessageQuality:
         ctx = MockContext(state={{"openapi_client": mock_client}})
 
         # Patch _get_api_instances to make the API method raise ConnectionError
-        api_name = tool_fn.__qualname__.split(".")[0] if "." in tool_fn.__qualname__ else mod_name
-        fake_api = MagicMock()
-        fake_api.__getattr__ = MagicMock(
-            return_value=MagicMock(side_effect=ConnectionError("Connection refused"))
-        )
+        fake_api = FakeApi(side_effect=ConnectionError("Connection refused"))
 
         with patch.dict(
             sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: MagicMock(
-                __getitem__=MagicMock(return_value=fake_api)
-            )}},
+            {{"_get_api_instances": lambda c: _make_api_dict(fake_api)}},
         ):
             args = _minimal_args(tool_fn)
             with pytest.raises(Exception) as exc_info:
@@ -630,8 +658,8 @@ class TestErrorMessageQuality:
 
     @pytest.mark.parametrize(
         "mod_name, tool_name, tool_fn, mcp_inst",
-        ALL_TOOLS,
-        ids=ALL_TOOL_IDS,
+        NON_PYDANTIC_TOOLS,
+        ids=NON_PYDANTIC_TOOL_IDS,
     )
     @pytest.mark.asyncio
     async def test_timeout_error_mentions_timeout(
@@ -646,16 +674,11 @@ class TestErrorMessageQuality:
         mock_client = MagicMock()
         ctx = MockContext(state={{"openapi_client": mock_client}})
 
-        fake_api = MagicMock()
-        fake_api.__getattr__ = MagicMock(
-            return_value=MagicMock(side_effect=TimeoutError("request timed out"))
-        )
+        fake_api = FakeApi(side_effect=TimeoutError("request timed out"))
 
         with patch.dict(
             sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: MagicMock(
-                __getitem__=MagicMock(return_value=fake_api)
-            )}},
+            {{"_get_api_instances": lambda c: _make_api_dict(fake_api)}},
         ):
             args = _minimal_args(tool_fn)
             with pytest.raises(Exception) as exc_info:
@@ -684,16 +707,11 @@ class TestErrorMessageQuality:
         mock_client = MagicMock()
         ctx = MockContext(state={{"openapi_client": mock_client}})
 
-        fake_api = MagicMock()
-        fake_api.__getattr__ = MagicMock(
-            return_value=MagicMock(side_effect=RuntimeError("boom"))
-        )
+        fake_api = FakeApi(side_effect=RuntimeError("boom"))
 
         with patch.dict(
             sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: MagicMock(
-                __getitem__=MagicMock(return_value=fake_api)
-            )}},
+            {{"_get_api_instances": lambda c: _make_api_dict(fake_api)}},
         ):
             args = _minimal_args(tool_fn)
             with pytest.raises(Exception):
@@ -716,8 +734,8 @@ class TestJsonSerialisability:
 
     @pytest.mark.parametrize(
         "mod_name, tool_name, tool_fn, mcp_inst",
-        ALL_TOOLS,
-        ids=ALL_TOOL_IDS,
+        NON_PYDANTIC_TOOLS,
+        ids=NON_PYDANTIC_TOOL_IDS,
     )
     @pytest.mark.asyncio
     async def test_successful_response_is_json_serialisable(
@@ -728,16 +746,11 @@ class TestJsonSerialisability:
         """
         mock_client = MagicMock()
         simple_response = {{"id": 1, "status": "ok"}}
-        fake_api = MagicMock()
-        fake_api.__getattr__ = MagicMock(
-            return_value=MagicMock(return_value=simple_response)
-        )
+        fake_api = FakeApi(return_value=simple_response)
 
         with patch.dict(
             sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: MagicMock(
-                __getitem__=MagicMock(return_value=fake_api)
-            )}},
+            {{"_get_api_instances": lambda c: _make_api_dict(fake_api)}},
         ):
             ctx = MockContext(state={{"openapi_client": mock_client}})
             args = _minimal_args(tool_fn)
@@ -764,8 +777,8 @@ class TestAsyncSafety:
 
     @pytest.mark.parametrize(
         "mod_name, tool_name, tool_fn, mcp_inst",
-        ALL_TOOLS[:1],  # representative — one tool is enough
-        ids=ALL_TOOL_IDS[:1],
+        NON_PYDANTIC_TOOLS[:1],  # representative — non-Pydantic tool
+        ids=NON_PYDANTIC_TOOL_IDS[:1],
     )
     @pytest.mark.asyncio
     async def test_coroutine_response_not_silently_wrapped(
@@ -782,18 +795,20 @@ class TestAsyncSafety:
             return {{"id": 1}}
 
         mock_client = MagicMock()
-        fake_api = MagicMock()
-        # Return the coroutine object (NOT awaited) — simulating sync call
-        # to an accidentally-async method.
-        fake_api.__getattr__ = MagicMock(
-            return_value=lambda *a, **kw: fake_api_method()
-        )
+        # FakeApi returns a coroutine object (NOT awaited) — simulating
+        # sync call to an accidentally-async method.
+        fake_api = FakeApi(return_value=None)  # placeholder
+
+        class CoroutineApi:
+            """API mock that returns un-awaited coroutines."""
+            def __getattr__(self, name):
+                return lambda *a, **kw: fake_api_method()
+
+        coroutine_api = CoroutineApi()
 
         with patch.dict(
             sys.modules[tool_fn.__module__].__dict__,
-            {{"_get_api_instances": lambda c: MagicMock(
-                __getitem__=MagicMock(return_value=fake_api)
-            )}},
+            {{"_get_api_instances": lambda c: _make_api_dict(coroutine_api)}},
         ):
             ctx = MockContext(state={{"openapi_client": mock_client}})
             args = _minimal_args(tool_fn)

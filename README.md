@@ -114,8 +114,8 @@ All features are configurable via the generated `fastmcp.json`:
 
 ```bash
 # Clone the repository
-git clone https://github.com/quotentiroler/mcp-generator-2.0.git
-cd mcp-generator-2.0
+git clone https://github.com/quotentiroler/mcp-generator-3.x.git
+cd mcp-generator-3.x
 
 # Install dependencies
 uv sync
@@ -128,8 +128,8 @@ uv run generate-mcp --help
 
 ```bash
 # Clone the repository
-git clone https://github.com/quotentiroler/mcp-generator-2.0.git
-cd mcp-generator-2.0
+git clone https://github.com/quotentiroler/mcp-generator-3.x.git
+cd mcp-generator-3.x
 
 # Create virtual environment
 python -m venv .venv
@@ -625,10 +625,10 @@ uv run mypy mcp_generator/
 uv run generate-mcp --file openapi.yaml
 
 # Validate OpenAPI spec
-uv run python scripts/validate_openapi.py
+uv run python mcp_generator/scripts/validate_openapi.py
 
 # Generate JWT keypair for testing
-uv run python scripts/generate_jwt_keypair.py
+uv run python mcp_generator/scripts/generate_jwt_keypair.py
 ```
 
 ---
@@ -663,7 +663,7 @@ Contributions are welcome! Here's how to contribute:
 
 ### Reporting Bugs
 
-1. Check existing issues: https://github.com/quotentiroler/mcp-generator-2.0/issues
+1. Check existing issues: https://github.com/quotentiroler/mcp-generator-3.x/issues
 2. Create detailed bug report with:
    - OpenAPI spec (sanitized/minimal example)
    - Full error message and stack trace

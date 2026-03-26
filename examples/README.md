@@ -20,10 +20,10 @@ A full-featured example using the Swagger Petstore API demonstrating:
 ```bash
 # From project root
 cd examples/petstore
-uv run generate-mcp --file openapi.yaml
+uv run generate-mcp --file openapi.json
 
 # Or specify path directly
-uv run generate-mcp --file examples/petstore/openapi.yaml
+uv run generate-mcp --file examples/petstore/openapi.json
 ```
 
 ### Test Generated Server
@@ -50,13 +50,13 @@ python *_mcp_generated.py --transport http --port 8000
    ```
 2. **Modify the OpenAPI spec**
 
-   - Edit `openapi.yaml` with your API definition
+   - Edit `openapi.json` with your API definition
    - Update server URLs
    - Define your endpoints and models
 3. **Generate your MCP server**
 
    ```bash
-   uv run generate-mcp --file openapi.yaml
+   uv run generate-mcp --file openapi.json
    ```
 4. **Test and iterate**
 

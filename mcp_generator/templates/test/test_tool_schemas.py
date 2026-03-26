@@ -34,12 +34,8 @@ def generate_tool_schema_tests(
     module_entries = []
     for mod_name, spec in sorted(modules.items()):
         server_module = spec.filename.replace(".py", "")
-        module_imports.append(
-            f"from servers.{server_module} import mcp as {mod_name}_mcp"
-        )
-        module_entries.append(
-            f'    ("{mod_name}", {mod_name}_mcp, {spec.tool_count}),'
-        )
+        module_imports.append(f"from servers.{server_module} import mcp as {mod_name}_mcp")
+        module_entries.append(f'    ("{mod_name}", {mod_name}_mcp, {spec.tool_count}),')
 
     imports_block = "\n".join(module_imports)
     entries_block = "\n".join(module_entries)

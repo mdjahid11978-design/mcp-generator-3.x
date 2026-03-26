@@ -49,9 +49,7 @@ def generate_behavioral_tests(
             f"from servers.{server_module} import mcp as {mod_name}_mcp, "
             f"_format_api_error, _get_api_instances"
         )
-        module_instances.append(
-            f'    ("{mod_name}", {mod_name}_mcp),'
-        )
+        module_instances.append(f'    ("{mod_name}", {mod_name}_mcp),')
 
     imports_block = "\n".join(module_imports)
     instances_block = "\n".join(module_instances)

@@ -44,14 +44,10 @@ def generate_server_integration_tests(
         )
 
         # Tool count check for this module
-        module_tool_checks.append(
-            f'    ("{mod_name}", {mod_name}_mcp, {spec.tool_count}),'
-        )
+        module_tool_checks.append(f'    ("{mod_name}", {mod_name}_mcp, {spec.tool_count}),')
 
         # Tag check — tools in this module should have the tag
-        module_metadata_checks.append(
-            f'    ("{mod_name}", {mod_name}_mcp, "{mod_name}"),'
-        )
+        module_metadata_checks.append(f'    ("{mod_name}", {mod_name}_mcp, "{mod_name}"),')
 
     imports_block = "\n".join(module_imports)
     tool_check_block = "\n".join(module_tool_checks)

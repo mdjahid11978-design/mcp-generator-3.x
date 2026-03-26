@@ -389,13 +389,9 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             modules, api_metadata, security_config
         )
         print("   • Tool schema validation tests")
-        tool_schema_test_code = generate_tool_schema_tests(
-            modules, api_metadata, security_config
-        )
+        tool_schema_test_code = generate_tool_schema_tests(modules, api_metadata, security_config)
         print("   • Behavioral edge-case tests (failure-driven)")
-        behavioral_test_code = generate_behavioral_tests(
-            modules, api_metadata, security_config
-        )
+        behavioral_test_code = generate_behavioral_tests(modules, api_metadata, security_config)
 
         if security_config.has_authentication():
             print("   • Authentication flow tests")

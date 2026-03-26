@@ -320,8 +320,8 @@ class TestGenerateMainCompositionServer:
     ) -> None:
         """PropelAuth should be checked before MultiAuth, MultiAuth before single JWT."""
         code = generate_main_composition_server(_two_modules, api_metadata, security_config_bearer)
-        propelauth_pos = code.index("_propelauth_cfg.get(\"enabled\"")
-        multi_auth_pos = code.index("_multi_auth_cfg.get(\"enabled\"")
+        propelauth_pos = code.index('_propelauth_cfg.get("enabled"')
+        multi_auth_pos = code.index('_multi_auth_cfg.get("enabled"')
         fallback_pos = code.index("jwt_verifier = create_jwt_verifier()")
         assert propelauth_pos < multi_auth_pos < fallback_pos
 

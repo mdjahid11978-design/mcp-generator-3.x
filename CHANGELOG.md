@@ -5,6 +5,12 @@ All notable changes to MCP Generator 3.x will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1-rc.1+23e773c] - 2026-03-27
+
+### Changed
+
+- Dependencies updated
+
 ## [3.1.1-rc+2b7ece3] - 2026-03-26
 
 ### Changed
@@ -21,6 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Various tests/templates and code quality improvements (camel_to_snake updates, tag handling, sys.path setup, server name sanitization, Ruff lint fixes, formatting)
 
 **Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/54
+
+
+
+- ✨ Features: Auto-populate fastmcp.json auth config from OpenAPI security schemes
+  - Enable oauth_proxy with upstream URLs and valid_scopes for OAuth2 authorizationCode
+  - Enable validate_tokens for bearer auth schemes
+
+- 🔧 Chores & Improvements: Minor formatting fixes in tests (ruff)
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/55
 
 
 ## [3.1.1-beta+d025b9d] - 2026-03-12

@@ -327,6 +327,22 @@ class TestRenderFastmcpTemplate:
         # But validate_tokens should still be true since auth schemes exist
         assert parsed["middleware"]["config"]["authentication"]["validate_tokens"] is True
 
+    def test_apikey_only_validate_tokens_false(
+        self, api_metadata: ApiMetadata, sample_modules: dict
+    ) -> None:
+        """apiKey-only auth should NOT enable validate_tokens (no JWT to validate)."""
+        import json
+
+        sc = SecurityConfig(
+            schemes={"api_key": {"type": "apiKey", "name": "api_key", "in": "header"}},
+        )
+        content = render_fastmcp_template(
+            api_metadata, sc, sample_modules, total_tools=5, server_name="test"
+        )
+        parsed = json.loads(content)
+        assert parsed["middleware"]["config"]["authentication"]["validate_tokens"] is False
+        assert parsed["features"]["oauth_proxy"]["enabled"] is False
+
 
 # ---------------------------------------------------------------------------
 # Generated tool code — progress, elicitation, sampling (FastMCP 3.1)

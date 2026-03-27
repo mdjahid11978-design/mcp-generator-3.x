@@ -119,8 +119,14 @@ def render_fastmcp_template(api_metadata, security_config, modules, total_tools,
     service_name = sanitize_server_name(api_metadata.title).replace("_", "-")
 
     # Determine auth settings from security config
-    has_auth = security_config and security_config.has_authentication()
-    validate_tokens = "true" if has_auth else "false"
+    # Only enable JWT validation for bearer schemes or authorizationCode OAuth2 flows
+    has_bearer = security_config and security_config.bearer_format
+    has_auth_code = (
+        security_config
+        and security_config.oauth_config
+        and "authorizationCode" in security_config.oauth_config.flows
+    )
+    validate_tokens = "true" if (has_bearer or has_auth_code) else "false"
 
     rendered = (
         template.replace("{{composition_strategy}}", "mount")

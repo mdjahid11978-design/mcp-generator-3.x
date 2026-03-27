@@ -29,6 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/54
 
 
+
+- ✨ Features: Auto-populate fastmcp.json auth config from OpenAPI security schemes
+  - Enable oauth_proxy with upstream URLs and valid_scopes for OAuth2 authorizationCode
+  - Enable validate_tokens for bearer auth schemes
+
+- 🔧 Chores & Improvements: Minor formatting fixes in tests (ruff)
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/55
+
+
 ## [3.1.1-beta+d025b9d] - 2026-03-12
 
 ### Changed

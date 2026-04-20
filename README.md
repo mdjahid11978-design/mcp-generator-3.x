@@ -24,9 +24,9 @@ MCP Generator 3.1 is an advanced code generator that automatically creates FastM
 
 > **Note**: Both JSON and YAML formats are supported. The generator includes a pure Python OpenAPI client generator — no Java or Node.js required.
 
-## 🏆 Why MCP Generator 3.1?
+## 🏆 Why MCP Generator 3.x?
 
-| Feature                     | MCP Generator 3.1                          | Typical Generators         |
+| Feature                     | MCP Generator 3.x                          | Typical Generators         |
 | --------------------------- | ------------------------------------------ | -------------------------- |
 | **Architecture**      | Modular, composable sub-servers            | Monolithic single file     |
 | **Authentication**    | JWT validation with JWKS, OAuth2 flows     | Basic token passing        |
@@ -42,29 +42,32 @@ MCP Generator 3.1 is an advanced code generator that automatically creates FastM
 
 ### Competitive Comparison
 
-How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on GitHub:
+How MCP Generator 3.x stacks up against every other OpenAPI-to-MCP project on GitHub (updated April 2026):
 
-| Feature | [**MCP Generator 3.1**](https://github.com/quotentiroler/mcp-generator-3.x) (Py, 13★) | [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator) (TS, 531★) | [mcp-link](https://github.com/automation-ai-labs/mcp-link) (Go, 602★) | [openapi-mcp-codegen](https://github.com/cnoe-io/openapi-mcp-codegen) (Py, 33★) | [openapi-mcp-generator](https://github.com/abutbul/openapi-mcp-generator) (Py, 28★) |
-|---|---|---|---|---|---|
-| **Approach** | Code generation | Code generation | Runtime proxy | Code generation | Code generation |
-| **OpenAPI 3.0** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **OpenAPI 3.1** | ✅ | ✅ | ✅ | ✅ | ❓ |
-| **Swagger 2.0** | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **Modular sub-servers** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **FastMCP 3.x native** | ✅ | ❌ | N/A | ❌ | ❌ |
-| **Streamable HTTP** | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **JWT / JWKS auth** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **OAuth2 flows** | ✅ | env vars only | ❌ | ❌ | ❌ |
-| **Middleware stack** | ✅ (timing, logging, cache, auth) | ❌ | ❌ | ❌ | ❌ |
-| **MCP Resources** | ✅ (GET endpoints) | ❌ | ❌ | ❌ | ✅ |
-| **Event Store** | ✅ (resumable) | ❌ | ❌ | ❌ | ❌ |
-| **Auto-generated tests** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **MCP Apps (UI)** | ✅ (tables, charts, forms) | ❌ | ❌ | ❌ | ❌ |
-| **Docker output** | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **Tag auto-discovery** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Server registry** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Pure Python** | ✅ (zero external deps) | ❌ (Node.js) | ❌ (Go binary) | ✅ | ✅ |
-| **Schema validation** | Pydantic | Zod | ❌ | ❌ | ❌ |
+| Feature | [**MCP Generator 3.x**](https://github.com/quotentiroler/mcp-generator-3.x) (Py, 18★) | [openapi-mcp-server](https://github.com/janwilmake/openapi-mcp-server) (TS, 887★) | [mcp-link](https://github.com/automation-ai-labs/mcp-link) (Go, 602★) | [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator) (TS, 566★) | [openapi-mcp](https://github.com/ckanthony/openapi-mcp) (Go, 183★) | [openapi-mcp-codegen](https://github.com/cnoe-io/openapi-mcp-codegen) (Py, 35★) |
+|---|---|---|---|---|---|---|
+| **Approach** | Code generation | Runtime search/proxy | Runtime proxy | Code generation | Runtime proxy (Docker) | Code generation |
+| **OpenAPI 3.0** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **OpenAPI 3.1** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Swagger 2.0** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Modular sub-servers** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **FastMCP 3.x native** | ✅ | ❌ | N/A | ❌ | N/A | ❌ |
+| **Streamable HTTP** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **JWT / JWKS auth** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **OAuth2 flows** | ✅ | ❌ | header injection | env vars only | ❌ | header injection |
+| **Middleware stack** | ✅ (timing, logging, cache, auth) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **MCP Resources** | ✅ (GET endpoints) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Event Store** | ✅ (resumable) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Auto-generated tests** | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ (eval suite) |
+| **MCP Apps (UI)** | ✅ (tables, charts, forms) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **A2A agent generation** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (LangGraph) |
+| **LLM-enhanced docs** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ (OpenAPI Overlay) |
+| **Docker output** | ✅ | ❌ | ❌ | ❌ | ✅ (primary) | ✅ |
+| **Tag auto-discovery** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Server registry** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Endpoint filtering** | tag-based | ❌ | path filters | x-mcp extension | tag/op filters | ❌ |
+| **Schema validation** | Pydantic | ❌ | ❌ | Zod | ❌ | ❌ |
+| **Actively maintained** | ✅ (Apr 2026) | ⚠️ (Feb 2026) | ❌ (Apr 2025) | ✅ (Mar 2026) | ⚠️ (Mar 2026) | ✅ (Apr 2026) |
 
 > **Note**: [mcpo](https://github.com/open-webui/mcpo) (4,027★) solves the **inverse** problem — exposing MCP servers as OpenAPI endpoints — and is complementary rather than competitive.
 

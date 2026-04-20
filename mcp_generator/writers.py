@@ -109,7 +109,9 @@ def write_apps_package(output_dir: Path) -> None:
     template_path = Path(__file__).parent / "templates" / "display_tools.py"
     dest_path = apps_dir / "display_tools.py"
     shutil.copy2(template_path, dest_path)
-    print("   ✅ apps/display_tools.py (show_table, show_detail, show_chart, show_form, show_comparison)")
+    print(
+        "   ✅ apps/display_tools.py (show_table, show_detail, show_chart, show_form, show_comparison)"
+    )
 
     # Create __init__.py for apps package
     init_file = apps_dir / "__init__.py"

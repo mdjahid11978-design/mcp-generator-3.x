@@ -514,9 +514,7 @@ def _parse_schema_fields(
         is_nested_object = prop_type == "object" and "properties" in resolved_prop
         nested_fields: list[ResponseField] = []
         if is_nested_object or "$ref" in prop_schema:
-            nested_fields = _parse_schema_fields(
-                resolved_prop, spec, depth + 1, max_depth, visited
-            )
+            nested_fields = _parse_schema_fields(resolved_prop, spec, depth + 1, max_depth, visited)
             is_nested_object = bool(nested_fields)
 
         # Array with items
@@ -636,18 +634,22 @@ def get_display_endpoints(base_dir: Path | None = None) -> dict[str, list[Displa
         for param in get_op.get("parameters", []):
             p_in = param.get("in")
             if p_in == "path":
-                path_params.append({
-                    "name": param.get("name"),
-                    "schema": param.get("schema", {}),
-                    "required": True,
-                })
+                path_params.append(
+                    {
+                        "name": param.get("name"),
+                        "schema": param.get("schema", {}),
+                        "required": True,
+                    }
+                )
             elif p_in == "query":
-                query_params.append({
-                    "name": param.get("name"),
-                    "required": param.get("required", False),
-                    "schema": param.get("schema", {}),
-                    "description": param.get("description", ""),
-                })
+                query_params.append(
+                    {
+                        "name": param.get("name"),
+                        "required": param.get("required", False),
+                        "schema": param.get("schema", {}),
+                        "description": param.get("description", ""),
+                    }
+                )
 
         endpoint = DisplayEndpoint(
             operation_id=operation_id,

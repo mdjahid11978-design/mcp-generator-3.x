@@ -119,7 +119,9 @@ def _render_detail_tool(endpoint: DisplayEndpoint, api_var_name: str) -> str:
     # Determine a title expression
     title_field = _find_title_field(schema.fields)
     if title_field:
-        title_expr = f'f"{schema.schema_name or "Detail"}: {{result.get(\'{title_field}\', \'Unknown\')}}"'
+        title_expr = (
+            f"f\"{schema.schema_name or 'Detail'}: {{result.get('{title_field}', 'Unknown')}}\""
+        )
     else:
         title_expr = f'"{schema.schema_name or "Detail"}"'
 
@@ -177,17 +179,25 @@ def _render_detail_fields(fields: list[ResponseField], indent: int = 16) -> str:
 
         lines.append(f'{pad}with Row(gap=4, align="center", css_class="py-2"):')
         label = f.name.replace("_", " ").title()
-        lines.append(f'{pad}    Text("{label}", css_class="font-medium text-muted-foreground w-40 shrink-0")')
+        lines.append(
+            f'{pad}    Text("{label}", css_class="font-medium text-muted-foreground w-40 shrink-0")'
+        )
 
         if f.is_enum:
             # Use Badge with variant mapping
             lines.append(f'{pad}    _val = str(result.get("{f.name}", ""))')
-            lines.append(f'{pad}    Badge(_val, variant=_STATUS_VARIANTS.get(_val.lower(), "outline"))')
+            lines.append(
+                f'{pad}    Badge(_val, variant=_STATUS_VARIANTS.get(_val.lower(), "outline"))'
+            )
         elif f.python_type == "bool":
             lines.append(f'{pad}    _val = result.get("{f.name}", False)')
-            lines.append(f'{pad}    Badge("Yes" if _val else "No", variant="success" if _val else "outline")')
+            lines.append(
+                f'{pad}    Badge("Yes" if _val else "No", variant="success" if _val else "outline")'
+            )
         elif f.format in ("date-time", "date"):
-            lines.append(f'{pad}    Text(str(result.get("{f.name}", "")), css_class="font-medium tabular-nums")')
+            lines.append(
+                f'{pad}    Text(str(result.get("{f.name}", "")), css_class="font-medium tabular-nums")'
+            )
         else:
             lines.append(f'{pad}    Text(str(result.get("{f.name}", "")), css_class="font-medium")')
         shown += 1
@@ -198,13 +208,17 @@ def _render_detail_fields(fields: list[ResponseField], indent: int = 16) -> str:
             label = f.name.replace("_", " ").title()
             lines.append(f"{pad}Separator()")
             lines.append(f'{pad}with Row(gap=4, align="center", css_class="py-2"):')
-            lines.append(f'{pad}    Text("{label}", css_class="font-medium text-muted-foreground w-40 shrink-0")')
+            lines.append(
+                f'{pad}    Text("{label}", css_class="font-medium text-muted-foreground w-40 shrink-0")'
+            )
             # Show nested object's displayable fields inline
             sub_val = f'result.get("{f.name}", {{}})'
             for nf in f.nested_fields:
                 if nf.is_array or nf.is_nested_object:
                     continue
-                lines.append(f'{pad}    Text(str(({sub_val}).get("{nf.name}", "")), css_class="font-medium")')
+                lines.append(
+                    f'{pad}    Text(str(({sub_val}).get("{nf.name}", "")), css_class="font-medium")'
+                )
                 break  # Show first field inline
 
     return "\n".join(lines)

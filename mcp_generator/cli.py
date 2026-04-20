@@ -323,6 +323,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         if args.enable_apps:
             print("\n🎨 Generating MCP Apps display tools...")
             from .writers import write_apps_package
+
             write_apps_package(output_dir)
 
         # Generate API-specific display tools from response schemas
@@ -375,7 +376,9 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             security_config,
             composition_strategy=composition_strategy,
             enable_apps=args.enable_apps,
-            display_tags=list(display_modules.keys()) if args.generate_ui and args.enable_apps and display_module_count > 0 else None,
+            display_tags=list(display_modules.keys())
+            if args.generate_ui and args.enable_apps and display_module_count > 0
+            else None,
         )
         from .utils import sanitize_server_name
 
@@ -386,7 +389,13 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         # Generate package files (README, pyproject.toml, __init__.py)
         print("\n📦 Generating package metadata files...")
         write_package_files(
-            output_dir, api_metadata, security_config, modules, total_tools, args.enable_storage, args.enable_apps
+            output_dir,
+            api_metadata,
+            security_config,
+            modules,
+            total_tools,
+            args.enable_storage,
+            args.enable_apps,
         )
 
         # Generate test files (conditionally include auth tests)
@@ -513,9 +522,13 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         if args.enable_resources and total_resources > 0:
             print("   • Enabled: MCP resources for data access")
         if args.enable_apps:
-            print("   • Enabled: MCP Apps display tools (show_table, show_detail, show_chart, show_form, show_comparison)")
+            print(
+                "   • Enabled: MCP Apps display tools (show_table, show_detail, show_chart, show_form, show_comparison)"
+            )
             if args.generate_ui and display_module_count > 0:
-                print(f"   • Enabled: {display_module_count} API-specific display modules (tables, detail cards)")
+                print(
+                    f"   • Enabled: {display_module_count} API-specific display modules (tables, detail cards)"
+                )
             print("   💡 Install UI deps: pip install 'fastmcp[apps]'")
 
         print("\n📂 Output Location:")
@@ -565,7 +578,9 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         if not args.enable_resources:
             disabled_features.append(("--enable-resources", "Expose API data as MCP resources"))
         if not args.enable_apps:
-            disabled_features.append(("--enable-apps", "Interactive UI display tools (tables, charts, forms)"))
+            disabled_features.append(
+                ("--enable-apps", "Interactive UI display tools (tables, charts, forms)")
+            )
 
         if disabled_features:
             print("\n💡 Optional Features (not enabled):")

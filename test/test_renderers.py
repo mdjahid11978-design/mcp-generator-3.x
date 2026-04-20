@@ -404,8 +404,12 @@ class TestRenderFastmcpTemplate:
         import json
 
         content = render_fastmcp_template(
-            api_metadata, security_config_none, sample_modules, total_tools=5,
-            server_name="test", enable_apps=True
+            api_metadata,
+            security_config_none,
+            sample_modules,
+            total_tools=5,
+            server_name="test",
+            enable_apps=True,
         )
         apps = json.loads(content)["features"]["apps"]
         assert apps["enabled"] is True
@@ -417,8 +421,12 @@ class TestRenderFastmcpTemplate:
         import json
 
         content = render_fastmcp_template(
-            api_metadata, security_config_none, sample_modules, total_tools=5,
-            server_name="test", enable_apps=True
+            api_metadata,
+            security_config_none,
+            sample_modules,
+            total_tools=5,
+            server_name="test",
+            enable_apps=True,
         )
         apps = json.loads(content)["features"]["apps"]
         assert apps["generative_ui"] is False

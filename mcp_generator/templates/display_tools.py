@@ -54,6 +54,7 @@ try:
         PieChart,
         Sparkline,
     )
+
     PREFAB_AVAILABLE = True
 except ImportError:
     PREFAB_AVAILABLE = False
@@ -199,7 +200,13 @@ def show_chart(
         subtitle: Optional description shown below the heading.
     """
     if not PREFAB_AVAILABLE:
-        return {"title": title, "chart_type": chart_type, "data": data, "x_axis": x_axis, "y_axes": y_axes}
+        return {
+            "title": title,
+            "chart_type": chart_type,
+            "data": data,
+            "x_axis": x_axis,
+            "y_axes": y_axes,
+        }
 
     chart_classes = {"bar": BarChart, "line": LineChart, "area": AreaChart, "pie": PieChart}
     ChartClass = chart_classes.get(chart_type, BarChart)
@@ -325,7 +332,9 @@ def show_comparison(
                     with CardContent():
                         for key in detail_keys:
                             with Row(gap=3, align="center", css_class="py-1"):
-                                Muted(key, css_class="w-28 shrink-0 text-xs uppercase tracking-wide")
+                                Muted(
+                                    key, css_class="w-28 shrink-0 text-xs uppercase tracking-wide"
+                                )
                                 val = str(item.get(key, ""))
                                 if key == highlight_key:
                                     Badge(val, variant="success")
@@ -462,7 +471,9 @@ def show_timeline(
                             desc = event.get("description")
                             if desc:
                                 Muted(str(desc))
-                            Small(str(event.get("timestamp", "")), css_class="text-muted-foreground")
+                            Small(
+                                str(event.get("timestamp", "")), css_class="text-muted-foreground"
+                            )
                     if i < len(events) - 1:
                         Separator()
 

@@ -1,7 +1,5 @@
 """Tests for Phase 2: response schema extraction and display tool generation."""
 
-
-
 from mcp_generator.display_renderers import (
     _table_columns_for_fields,
     _tool_name_for_endpoint,
@@ -28,7 +26,12 @@ SCHEMA_TEST_SPEC: dict = {
                 "tags": ["pet"],
                 "summary": "Get pet by ID",
                 "parameters": [
-                    {"name": "petId", "in": "path", "required": True, "schema": {"type": "integer"}},
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {
@@ -48,7 +51,12 @@ SCHEMA_TEST_SPEC: dict = {
                 "tags": ["pet"],
                 "summary": "Find all pets",
                 "parameters": [
-                    {"name": "status", "in": "query", "required": False, "schema": {"type": "string"}},
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": False,
+                        "schema": {"type": "string"},
+                    },
                 ],
                 "responses": {
                     "200": {
@@ -108,7 +116,12 @@ SCHEMA_TEST_SPEC: dict = {
                 "tags": ["store"],
                 "summary": "Get order by ID",
                 "parameters": [
-                    {"name": "orderId", "in": "path", "required": True, "schema": {"type": "integer"}},
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                    },
                 ],
                 "responses": {
                     "200": {
@@ -308,9 +321,7 @@ class TestExtractResponseSchema:
         assert schema is None
 
     def test_returns_none_for_no_content(self) -> None:
-        schema = _extract_response_schema(
-            {"200": {"description": "OK"}}, SCHEMA_TEST_SPEC
-        )
+        schema = _extract_response_schema({"200": {"description": "OK"}}, SCHEMA_TEST_SPEC)
         assert schema is None
 
 
@@ -416,7 +427,9 @@ class TestRenderDisplayModule:
                 tag="pet",
                 path_params=[{"name": "petId", "required": True, "schema": {"type": "integer"}}],
                 query_params=[],
-                response_schema=ResponseSchema(fields=pet_fields, is_object=True, schema_name="Pet"),
+                response_schema=ResponseSchema(
+                    fields=pet_fields, is_object=True, schema_name="Pet"
+                ),
             ),
         ]
 

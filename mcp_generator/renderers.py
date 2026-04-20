@@ -107,7 +107,9 @@ def render_pyproject_template(
     )
 
 
-def render_fastmcp_template(api_metadata, security_config, modules, total_tools, server_name, enable_apps=False):
+def render_fastmcp_template(
+    api_metadata, security_config, modules, total_tools, server_name, enable_apps=False
+):
     """Render the fastmcp.json template with provided values."""
     import json
 

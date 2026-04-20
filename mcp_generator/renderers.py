@@ -14,7 +14,7 @@ from .utils import camel_to_snake, format_parameter_description, sanitize_name
 
 
 def render_pyproject_template(
-    api_metadata, security_config, server_name, total_tools, enable_storage=False
+    api_metadata, security_config, server_name, total_tools, enable_storage=False, enable_apps=False
 ):
     """Render the pyproject.toml template with provided values."""
     template_path = Path(__file__).parent / "templates" / "pyproject_template.toml"
@@ -61,7 +61,7 @@ def render_pyproject_template(
 
     # Build dependencies list
     dependencies = [
-        "fastmcp>=3.1.0,<4.0.0",
+        "fastmcp[apps]>=3.2.0,<4.0.0" if enable_apps else "fastmcp>=3.2.0,<4.0.0",
         "httpx>=0.23.0",
         "pydantic>=2.0.0,<3.0.0",
         "python-dateutil>=2.8.2",
@@ -78,6 +78,8 @@ def render_pyproject_template(
         dependencies.append("cryptography>=42.0.0")
 
     packages = ["servers"]
+    if enable_apps:
+        packages.append("apps")
     if security_config.has_authentication():
         packages.insert(1, "middleware")
     # Render template
@@ -105,7 +107,7 @@ def render_pyproject_template(
     )
 
 
-def render_fastmcp_template(api_metadata, security_config, modules, total_tools, server_name):
+def render_fastmcp_template(api_metadata, security_config, modules, total_tools, server_name, enable_apps=False):
     """Render the fastmcp.json template with provided values."""
     import json
 
@@ -149,6 +151,12 @@ def render_fastmcp_template(api_metadata, security_config, modules, total_tools,
             if auth_code_flow.scopes:
                 oauth_proxy["valid_scopes"] = list(auth_code_flow.scopes.keys())
             rendered = json.dumps(parsed, indent=2) + "\n"
+
+    # Auto-enable apps feature when --enable-apps is set
+    if enable_apps:
+        parsed = json.loads(rendered)
+        parsed["features"]["apps"]["enabled"] = True
+        rendered = json.dumps(parsed, indent=2) + "\n"
 
     return rendered
 

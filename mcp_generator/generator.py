@@ -74,6 +74,7 @@ def generate_main_composition_server(
     security_config: SecurityConfig,
     composition_strategy: str = "mount",
     resource_prefix_format: str = "path",
+    enable_apps: bool = False,
 ) -> str:
     """Generate main server that composes all modular servers.
 
@@ -132,6 +133,40 @@ def generate_main_composition_server(
     compositions = "\n    ".join(
         [f'app.mount({name}_mcp, namespace="{name}")' for name in module_names]
     )
+
+    # --- MCP Apps: display tools and GenerativeUI ---
+    apps_import = ""
+    apps_composition = ""
+    if enable_apps:
+        apps_import = """
+# MCP Apps: curated display tools (tables, charts, forms, detail views)
+from apps.display_tools import mcp as display_tools_mcp
+"""
+        apps_composition = '    app.mount(display_tools_mcp, namespace="display")'
+        # Check if GenerativeUI is enabled in fastmcp.json config
+        apps_import += """
+# MCP Apps: GenerativeUI (LLM-generated UIs at runtime) — conditional on fastmcp.json
+_apps_cfg = _features_config.get("apps", {})
+_generative_ui_enabled = _apps_cfg.get("generative_ui", False)
+if _generative_ui_enabled:
+    try:
+        from fastmcp.apps.generative import GenerativeUI
+        _generative_ui_provider = GenerativeUI()
+    except ImportError:
+        _generative_ui_provider = None
+        import logging as _logging
+        _logging.getLogger(__name__).warning("GenerativeUI requires fastmcp[apps]>=3.2.0")
+else:
+    _generative_ui_provider = None
+"""
+        apps_composition += """
+    if _generative_ui_provider is not None:
+        app.add_provider(_generative_ui_provider)
+        try:
+            print("  🎨 GenerativeUI provider enabled (LLM-generated UIs)")
+        except UnicodeEncodeError:
+            print("  GenerativeUI provider enabled")\
+"""
 
     # Build comprehensive header
     header_lines = [
@@ -340,7 +375,6 @@ if str(generated_path) not in sys.path:
 
 # Import all modular servers
 {imports}{auth_imports}
-
 logger = logging.getLogger(__name__)
 
 # --- Load feature configuration from fastmcp.json ---
@@ -354,7 +388,7 @@ if _fastmcp_json.exists():
             _features_config = _fc.get("features", {{}})
     except Exception:
         pass
-
+{apps_import}
 # --- Build transforms list (FastMCP 3.1) ---
 _transforms = []
 
@@ -421,6 +455,7 @@ def _compose_mcp_servers():
     except UnicodeEncodeError:
         print("Composing modular servers...")
     {compositions}
+{apps_composition}
     try:
         print(f"✅ Server composition complete - {total_tool_count} MCP tools registered")
     except UnicodeEncodeError:

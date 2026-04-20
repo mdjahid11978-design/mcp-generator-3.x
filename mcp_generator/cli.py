@@ -106,11 +106,13 @@ Examples:
   # With optional features
   generate-mcp --enable-storage --enable-caching
   generate-mcp --enable-resources
+  generate-mcp --enable-apps
 
 Optional Features (disabled by default for simplicity):
   --enable-storage    Persistent storage for OAuth tokens & state
   --enable-caching    Response caching (reduces API calls)
   --enable-resources  MCP resources from GET endpoints
+  --enable-apps       MCP Apps with interactive UI display tools
 
 Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         """,
@@ -149,6 +151,13 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         action="store_true",
         default=False,
         help="Generate MCP resource templates from GET endpoints (exposes API data as resources)",
+    )
+
+    parser.add_argument(
+        "--enable-apps",
+        action="store_true",
+        default=False,
+        help="Generate MCP Apps display tools (interactive tables, charts, forms) and optional GenerativeUI",
     )
 
     args = parser.parse_args()
@@ -301,6 +310,12 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
                 print("   ✅ cache.py")
                 print("   💡 Decorate expensive tools with @cache.cached(ttl=600)")
 
+        # Generate MCP Apps display tools if requested
+        if args.enable_apps:
+            print("\n🎨 Generating MCP Apps display tools...")
+            from .writers import write_apps_package
+            write_apps_package(output_dir)
+
         # Generate and write main composition server
         print("\n🔗 Generating main composition server...")
 
@@ -323,6 +338,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             api_metadata,
             security_config,
             composition_strategy=composition_strategy,
+            enable_apps=args.enable_apps,
         )
         from .utils import sanitize_server_name
 
@@ -333,7 +349,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
         # Generate package files (README, pyproject.toml, __init__.py)
         print("\n📦 Generating package metadata files...")
         write_package_files(
-            output_dir, api_metadata, security_config, modules, total_tools, args.enable_storage
+            output_dir, api_metadata, security_config, modules, total_tools, args.enable_storage, args.enable_apps
         )
 
         # Generate test files (conditionally include auth tests)
@@ -459,6 +475,9 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             print("   • Enabled: Response caching with configurable TTL")
         if args.enable_resources and total_resources > 0:
             print("   • Enabled: MCP resources for data access")
+        if args.enable_apps:
+            print("   • Enabled: MCP Apps display tools (show_table, show_detail, show_chart, show_form, show_comparison)")
+            print("   💡 Install UI deps: pip install 'fastmcp[apps]'")
 
         print("\n📂 Output Location:")
         print(f"   {output_dir.relative_to(src_dir)}/")
@@ -506,6 +525,8 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             )
         if not args.enable_resources:
             disabled_features.append(("--enable-resources", "Expose API data as MCP resources"))
+        if not args.enable_apps:
+            disabled_features.append(("--enable-apps", "Interactive UI display tools (tables, charts, forms)"))
 
         if disabled_features:
             print("\n💡 Optional Features (not enabled):")

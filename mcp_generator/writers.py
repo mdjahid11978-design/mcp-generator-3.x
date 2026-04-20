@@ -98,6 +98,30 @@ def write_main_server(code: str, output_file: Path) -> None:
     print(f"✅ Generated main server: {output_file}")
 
 
+def write_apps_package(output_dir: Path) -> None:
+    """Write MCP Apps package (curated display tools) to the filesystem."""
+    import shutil
+
+    apps_dir = output_dir / "apps"
+    apps_dir.mkdir(exist_ok=True, parents=True)
+
+    # Copy display_tools.py template
+    template_path = Path(__file__).parent / "templates" / "display_tools.py"
+    dest_path = apps_dir / "display_tools.py"
+    shutil.copy2(template_path, dest_path)
+    print("   ✅ apps/display_tools.py (show_table, show_detail, show_chart, show_form, show_comparison)")
+
+    # Create __init__.py for apps package
+    init_file = apps_dir / "__init__.py"
+    with open(init_file, "w", encoding="utf-8") as f:
+        f.write('"""MCP Apps package — curated display tools and UI providers."""\n')
+        f.write("from .display_tools import mcp as display_tools_mcp\n\n")
+        f.write("__all__ = [\n")
+        f.write('    "display_tools_mcp",\n')
+        f.write("]\n")
+    print("   ✅ apps/__init__.py")
+
+
 def write_package_files(
     output_dir: Path,
     api_metadata,
@@ -105,6 +129,7 @@ def write_package_files(
     modules: dict[str, ModuleSpec],
     total_tools: int,
     enable_storage: bool = False,
+    enable_apps: bool = False,
 ) -> None:
     """Write package metadata files (README, pyproject.toml, __init__.py)."""
 
@@ -410,6 +435,7 @@ See the FastMCP docs for more options: https://docs.fastmcp.com/servers/middlewa
         server_name=server_name,
         total_tools=total_tools,
         enable_storage=enable_storage,
+        enable_apps=enable_apps,
     )
     pyproject_file = output_dir / "pyproject.toml"
     with open(pyproject_file, "w", encoding="utf-8") as f:
@@ -425,6 +451,7 @@ See the FastMCP docs for more options: https://docs.fastmcp.com/servers/middlewa
         modules=modules,
         total_tools=total_tools,
         server_name=server_name,
+        enable_apps=enable_apps,
     )
     fastmcp_file = output_dir / "fastmcp.json"
     with open(fastmcp_file, "w", encoding="utf-8") as f:

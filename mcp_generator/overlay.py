@@ -225,17 +225,21 @@ def generate_overlay(spec: dict[str, Any]) -> dict[str, Any]:
 
             # Enhance description if missing or shorter than purpose
             if not desc or len(desc) < len(purpose):
-                overlay["actions"].append({
-                    "target": f"$.paths['{path}'].{method}.description",
-                    "update": purpose,
-                })
+                overlay["actions"].append(
+                    {
+                        "target": f"$.paths['{path}'].{method}.description",
+                        "update": purpose,
+                    }
+                )
 
             # Add summary if missing
             if not summary:
-                overlay["actions"].append({
-                    "target": f"$.paths['{path}'].{method}.summary",
-                    "update": purpose[:120],
-                })
+                overlay["actions"].append(
+                    {
+                        "target": f"$.paths['{path}'].{method}.summary",
+                        "update": purpose[:120],
+                    }
+                )
 
             # Enhance parameter descriptions
             for idx, param in enumerate(operation.get("parameters", [])):
@@ -244,10 +248,12 @@ def generate_overlay(spec: dict[str, Any]) -> dict[str, Any]:
                 if not param.get("description"):
                     enhanced = _enhance_param(param)
                     if enhanced:
-                        overlay["actions"].append({
-                            "target": f"$.paths['{path}'].{method}.parameters[{idx}].description",
-                            "update": enhanced,
-                        })
+                        overlay["actions"].append(
+                            {
+                                "target": f"$.paths['{path}'].{method}.parameters[{idx}].description",
+                                "update": enhanced,
+                            }
+                        )
 
     logger.info("Generated overlay with %d actions for %s", len(overlay["actions"]), title)
     return overlay

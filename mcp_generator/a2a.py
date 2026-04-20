@@ -41,13 +41,15 @@ def generate_agent_card(
     for mod_name, mod in sorted(modules.items()):
         # Each module becomes a skill
         tag_label = mod_name.replace("_", " ")
-        skills.append({
-            "id": f"{mod_name}_skill",
-            "name": f"{tag_label.title()} Operations",
-            "description": f"Handles {tag_label} API operations via MCP tools ({mod.tool_count} tools).",
-            "tags": [mod_name, "mcp", "api"],
-            "examples": [f"Manage {tag_label} resources"],
-        })
+        skills.append(
+            {
+                "id": f"{mod_name}_skill",
+                "name": f"{tag_label.title()} Operations",
+                "description": f"Handles {tag_label} API operations via MCP tools ({mod.tool_count} tools).",
+                "tags": [mod_name, "mcp", "api"],
+                "examples": [f"Manage {tag_label} resources"],
+            }
+        )
 
     card: dict[str, Any] = {
         "name": api_metadata.title,

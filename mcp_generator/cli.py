@@ -293,7 +293,9 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             print(f"   ✅ Enhanced {len(auto_overlay.get('actions', []))} descriptions")
 
         # Write the enhanced spec back (to a separate file to preserve the original)
-        enhanced_spec_path = openapi_spec.parent / f"{openapi_spec.stem}_enhanced{openapi_spec.suffix}"
+        enhanced_spec_path = (
+            openapi_spec.parent / f"{openapi_spec.stem}_enhanced{openapi_spec.suffix}"
+        )
         with open(enhanced_spec_path, "w", encoding="utf-8") as _f:
             _json_overlay.dump(spec_copy, _f, indent=2)
         openapi_spec = enhanced_spec_path
@@ -429,9 +431,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             agent_card_path = output_dir / "agent_card.json"
             import json as _a2a_json
 
-            agent_card_path.write_text(
-                _a2a_json.dumps(agent_card, indent=2), encoding="utf-8"
-            )
+            agent_card_path.write_text(_a2a_json.dumps(agent_card, indent=2), encoding="utf-8")
             print(f"   ✅ agent_card.json ({len(agent_card['skills'])} skills)")
 
             adapter_code = render_a2a_adapter(api_metadata)

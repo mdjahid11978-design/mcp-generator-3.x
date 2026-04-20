@@ -115,7 +115,10 @@ class TestApplyOverlay:
             ],
         }
         result = apply_overlay(spec, overlay)
-        assert result["paths"]["/pets"]["get"]["parameters"][0]["description"] == "Max results to return."
+        assert (
+            result["paths"]["/pets"]["get"]["parameters"][0]["description"]
+            == "Max results to return."
+        )
 
     def test_remove_action(self):
         spec = copy.deepcopy(SAMPLE_SPEC)
@@ -144,9 +147,7 @@ class TestApplyOverlay:
         overlay = {
             "overlay": "1.0.0",
             "info": {"title": "T"},
-            "actions": [
-                {"target": "$.nonexistent.deep.path", "update": "value"}
-            ],
+            "actions": [{"target": "$.nonexistent.deep.path", "update": "value"}],
         }
         # Should not raise — creates intermediate dicts
         apply_overlay(spec, overlay)

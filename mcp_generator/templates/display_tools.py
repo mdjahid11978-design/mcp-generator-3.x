@@ -26,6 +26,8 @@ try:
         Badge,
         Button,
         Column,
+        DataTable,
+        DataTableColumn,
         ForEach,
         Form,
         Heading,
@@ -36,7 +38,6 @@ try:
         Text,
     )
     from prefab_ui.components.charts import BarChart, ChartSeries, LineChart
-    from prefab_ui.components.data import DataTable, TableColumn
     from prefab_ui.actions import SetState, ShowToast
     from prefab_ui.actions.mcp import CallTool
     from prefab_ui.rx import RESULT
@@ -84,7 +85,7 @@ def show_table(
         Heading(title)
         DataTable(
             data=rows,
-            columns=[TableColumn(key=c["key"], label=c.get("label", c["key"])) for c in columns],
+            columns=[DataTableColumn(key=c["key"], header=c.get("label", c["key"])) for c in columns],
         )
 
     return PrefabApp(view=view)

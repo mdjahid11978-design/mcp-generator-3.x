@@ -90,7 +90,7 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
-        description="MCP Generator 3.1 - OpenAPI to FastMCP 3.x Server Generator",
+        description="MCP Generator 3.x - OpenAPI to FastMCP 3.x Server Generator",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -172,7 +172,7 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
     args = parser.parse_args()
 
     print("=" * 80)
-    print("MCP Generator 3.1 - OpenAPI to FastMCP 3.x Server Generator")
+    print("MCP Generator 3.x - OpenAPI to FastMCP 3.x Server Generator")
     print("=" * 80)
 
     # Use current working directory for all operations
@@ -421,14 +421,14 @@ Documentation: https://github.com/quotentiroler/mcp-generator-2.0
             print("   • Resource template tests")
             resource_test_code = generate_resource_tests(modules, api_metadata, security_config)
 
-        # Always generate transform tests (FastMCP 3.1 features)
-        print("   • FastMCP 3.1 transform tests")
+        # Always generate transform tests (FastMCP 3.x features)
+        print("   • FastMCP 3.x transform tests")
         transform_test_code = generate_transform_tests(api_metadata, security_config, modules)
 
         # Generate multi-auth tests if auth is configured
         multi_auth_test_code = None
         if security_config.has_authentication():
-            print("   • FastMCP 3.1 multi-auth tests")
+            print("   • FastMCP 3.x multi-auth tests")
             multi_auth_test_code = generate_multi_auth_tests(api_metadata, security_config, modules)
 
         # Always generate in-process integration tests and schema validation

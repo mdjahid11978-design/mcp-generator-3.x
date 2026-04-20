@@ -145,6 +145,15 @@ def {func_name}({params_str}) -> Any:
             Badge(str(e), variant="error")
         return PrefabApp(view=view)
 
+    if result is None:
+        msg = "No record found."
+        if not PREFAB_AVAILABLE:
+            return {{"error": msg}}
+        with Column(gap=4, css_class="p-6") as view:
+            Heading("Not Found")
+            Badge(msg, variant="warning")
+        return PrefabApp(view=view)
+
     if not PREFAB_AVAILABLE:
         return result
 

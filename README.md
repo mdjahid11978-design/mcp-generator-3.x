@@ -37,6 +37,7 @@ MCP Generator 3.1 is an advanced code generator that automatically creates FastM
 | **Observability**     | Timing, logging, error handling middleware | Basic logging              |
 | **Tag Discovery**     | Auto-discovers undeclared API tags          | Manual tag mapping         |
 | **Event Store**       | Resumable SSE with event persistence       | Simple SSE                 |
+| **MCP Apps**          | Interactive UI display tools (tables, charts, forms) | None                 |
 | **Production Ready**  | ✅ Yes                                     | ⚠️ Often prototypes      |
 
 ### Competitive Comparison
@@ -58,6 +59,7 @@ How MCP Generator 3.1 stacks up against every other OpenAPI-to-MCP project on Gi
 | **MCP Resources** | ✅ (GET endpoints) | ❌ | ❌ | ❌ | ✅ |
 | **Event Store** | ✅ (resumable) | ❌ | ❌ | ❌ | ❌ |
 | **Auto-generated tests** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **MCP Apps (UI)** | ✅ (tables, charts, forms) | ❌ | ❌ | ❌ | ❌ |
 | **Docker output** | ✅ | ❌ | ❌ | ❌ | ✅ |
 | **Tag auto-discovery** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Server registry** | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -183,8 +185,14 @@ uv run generate-mcp --enable-storage --enable-caching
 # Enable MCP resources (expose API data as resources)
 uv run generate-mcp --enable-resources
 
+# Enable MCP Apps (interactive UI: tables, charts, forms, detail views)
+uv run generate-mcp --enable-apps
+
+# Enable MCP Apps with API-specific display tools from response schemas
+uv run generate-mcp --enable-apps --generate-ui
+
 # Enable all features
-uv run generate-mcp --enable-storage --enable-caching --enable-resources
+uv run generate-mcp --enable-storage --enable-caching --enable-resources --enable-apps --generate-ui
 ```
 
 **Available Features:**
@@ -194,6 +202,8 @@ uv run generate-mcp --enable-storage --enable-caching --enable-resources
 | `--enable-storage` | Persistent storage backend | OAuth refresh tokens, session data, user preferences |
 | `--enable-caching` | Response caching with TTL | Rate-limited APIs, expensive operations, slow endpoints |
 | `--enable-resources` | MCP resource templates | Expose API data for context/retrieval (GET endpoints) |
+| `--enable-apps` | MCP Apps with interactive UI display tools | Rich tables, charts, forms, and detail views in MCP clients |
+| `--generate-ui` | API-specific display tools from response schemas | Auto-generated UI per endpoint (requires `--enable-apps`) |
 
 > **Note**: `--enable-caching` requires `--enable-storage` as it uses the storage backend for cache persistence.
 
@@ -412,6 +422,45 @@ npx @modelcontextprotocol/inspector --cli \
 - **Performance**: Use Inspector's timing metrics to identify slow operations
 
 For more details, see the [Inspector documentation](https://github.com/modelcontextprotocol/inspector).
+
+---
+
+## 🎨 MCP Apps — Interactive UI Display Tools
+
+MCP Apps bring rich, interactive UI to MCP tool responses. Instead of returning raw JSON, your tools render as tables, charts, forms, and detail views in supported MCP clients.
+
+### How It Works
+
+1. **`--enable-apps`** adds curated, API-agnostic display tools (`show_table`, `show_detail`, `show_chart`, `show_form`, `show_comparison`) that the LLM fills with data from any API response
+2. **`--generate-ui`** additionally introspects your OpenAPI response schemas and generates **per-endpoint display tools** (e.g., `show_pet_table`, `show_pet_detail`) with columns, badges, and data types pre-configured
+
+```bash
+# Curated display tools only (works with any API)
+uv run generate-mcp --enable-apps
+
+# + API-specific display tools auto-generated from response schemas
+uv run generate-mcp --enable-apps --generate-ui
+```
+
+### Display Tool Types
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `show_table` | Interactive data table with sortable columns | List endpoints, search results |
+| `show_detail` | Card layout with key-value fields and badges | Single-record views (user profile, order details) |
+| `show_chart` | Line, bar, area, and pie charts | Analytics, metrics, time-series data |
+| `show_form` | Input form with validation | Create/update operations |
+| `show_comparison` | Side-by-side comparison cards | Comparing records or options |
+
+### Requirements
+
+MCP Apps requires `prefab-ui` (the FastMCP Apps rendering library):
+
+```bash
+pip install "fastmcp[apps]"
+```
+
+If `prefab-ui` is not installed, display tools gracefully fall back to returning structured JSON — no runtime errors.
 
 ---
 

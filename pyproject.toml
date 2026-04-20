@@ -18,14 +18,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Code Generators",
 ]
-
-[project.urls]
-Homepage = "https://github.com/quotentiroler/mcp-generator-3.x"
-Documentation = "https://quotentiroler.github.io/mcp-generator-3.x/"
-Repository = "https://github.com/quotentiroler/mcp-generator-3.x"
-Issues = "https://github.com/quotentiroler/mcp-generator-3.x/issues"
-Changelog = "https://github.com/quotentiroler/mcp-generator-3.x/blob/main/CHANGELOG.md"
-
 dependencies = [
     "pyyaml>=6.0.0",  # For parsing OpenAPI YAML files
     "httpx>=0.28.1",  # For downloading OpenAPI specs from URLs (--url flag)
@@ -43,6 +35,13 @@ ci = [
 generate-mcp = "mcp_generator.cli:main"
 register-mcp = "mcp_generator.register_mcp:main"
 run-mcp = "mcp_generator.run_mcp:main"
+
+[project.urls]
+Homepage = "https://github.com/quotentiroler/mcp-generator-3.x"
+Documentation = "https://quotentiroler.github.io/mcp-generator-3.x/"
+Repository = "https://github.com/quotentiroler/mcp-generator-3.x"
+Issues = "https://github.com/quotentiroler/mcp-generator-3.x/issues"
+Changelog = "https://github.com/quotentiroler/mcp-generator-3.x/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]

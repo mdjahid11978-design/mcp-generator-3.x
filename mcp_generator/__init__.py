@@ -32,7 +32,9 @@ from .models import ApiMetadata, ModuleSpec, ParameterInfo, ResourceSpec, Securi
 from .test_generator import generate_auth_flow_tests, generate_tool_tests
 from .utils import get_pydantic_model_schema, sanitize_name
 
-__version__ = "3.2.1"
+from importlib.metadata import version as _pkg_version
+
+__version__ = _pkg_version("mcp-generator")
 
 __all__ = [
     "main",

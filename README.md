@@ -67,7 +67,7 @@ How MCP Generator 3.x stacks up against every other OpenAPI-to-MCP project on Gi
 | **Server registry** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Endpoint filtering** | tag-based | ❌ | path filters | x-mcp extension | tag/op filters | ❌ |
 | **Schema validation** | Pydantic | ❌ | ❌ | Zod | ❌ | ❌ |
-| **Actively maintained** | ✅ (Apr 2026) | ⚠️ (Feb 2026) | ❌ (Apr 2025) | ✅ (Mar 2026) | ⚠️ (Mar 2026) | ✅ (Apr 2026) |
+| **Actively maintained** | ✅ (Apr 2026) | ⚠️ (Feb 2026) | ❌ (Apr 2025) | ✅ (Mar 2026) | ⚠️ (Mar 2026) | ❌ (Nov 2025) |
 
 > **Note**: [mcpo](https://github.com/open-webui/mcpo) (4,027★) solves the **inverse** problem — exposing MCP servers as OpenAPI endpoints — and is complementary rather than competitive.
 

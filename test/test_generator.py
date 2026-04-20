@@ -497,6 +497,9 @@ class TestWriteAppsPackage:
         assert "show_table" in content
         assert "show_detail" in content
         assert "show_chart" in content
+        assert "show_metrics" in content
+        assert "show_timeline" in content
+        assert "show_progress" in content
 
     def test_creates_init_py(self, tmp_path) -> None:
         from mcp_generator.writers import write_apps_package

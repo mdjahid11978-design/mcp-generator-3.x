@@ -33,13 +33,17 @@ try:
         Column,
         DataTable,
         DataTableColumn,
+        Dot,
         Form,
         Grid,
         Heading,
         Input,
+        Metric,
         Muted,
+        Progress,
         Row,
         Separator,
+        Small,
         Text,
     )
     from prefab_ui.components.charts import (
@@ -48,6 +52,7 @@ try:
         ChartSeries,
         LineChart,
         PieChart,
+        Sparkline,
     )
     PREFAB_AVAILABLE = True
 except ImportError:
@@ -326,5 +331,209 @@ def show_comparison(
                                     Badge(val, variant="success")
                                 else:
                                     Text(val, css_class="font-medium")
+
+    return PrefabApp(view=view)
+
+
+# =============================================================================
+# show_metrics — KPI dashboard with optional sparklines
+# =============================================================================
+
+
+@mcp.tool(
+    app=True if PREFAB_AVAILABLE else False,
+    tags=["display"],
+    description="Display key metrics as a dashboard grid with optional sparklines.",
+)
+def show_metrics(
+    title: str,
+    metrics: list[dict[str, Any]],
+    columns: int = 4,
+    subtitle: str = "",
+) -> Any:
+    """Display KPI metrics in a responsive grid layout.
+
+    Args:
+        title: Dashboard heading.
+        metrics: Metric definitions, each with 'label' and 'value'.
+                 Optional: 'delta' (str, e.g. "+5%"), 'trend' ("up"/"down"),
+                 'trend_sentiment' ("positive"/"negative"/"neutral"),
+                 'description' (str), 'sparkline' (list of numbers).
+                 Example: [{"label": "Revenue", "value": "$42K", "delta": "+12%",
+                            "trend": "up", "trend_sentiment": "positive",
+                            "sparkline": [10, 25, 18, 30, 42]}]
+        columns: Number of grid columns (default: 4).
+        subtitle: Optional description shown below the heading.
+    """
+    if not PREFAB_AVAILABLE:
+        return {"title": title, "metrics": metrics}
+
+    with Column(gap=5, css_class="p-6") as view:
+        Heading(title)
+        if subtitle:
+            Muted(subtitle)
+        with Grid(columns=columns, gap=4):
+            for m in metrics:
+                with Card():
+                    with CardContent(css_class="pt-4"):
+                        Metric(
+                            label=str(m["label"]),
+                            value=str(m["value"]),
+                            delta=m.get("delta"),
+                            trend=m.get("trend"),
+                            trend_sentiment=m.get("trend_sentiment"),
+                            description=m.get("description"),
+                        )
+                        sparkline_data = m.get("sparkline")
+                        if sparkline_data:
+                            Sparkline(
+                                data=sparkline_data,
+                                variant="line",
+                                fill=True,
+                                curve="smooth",
+                            )
+
+    return PrefabApp(view=view)
+
+
+# =============================================================================
+# show_timeline — Chronological event feed
+# =============================================================================
+
+
+@mcp.tool(
+    app=True if PREFAB_AVAILABLE else False,
+    tags=["display"],
+    description="Display events as a chronological timeline with status indicators.",
+)
+def show_timeline(
+    title: str,
+    events: list[dict[str, Any]],
+    subtitle: str = "",
+) -> Any:
+    """Display a chronological timeline of events.
+
+    Args:
+        title: Timeline heading.
+        events: Event entries, each with 'title' and 'timestamp'.
+                Optional: 'description' (str), 'status' (str — mapped to dot color),
+                'badge' (str — displayed as Badge), 'badge_variant' (str).
+                Example: [{"title": "Order placed", "timestamp": "2026-04-20 10:30",
+                           "status": "completed", "description": "Payment confirmed",
+                           "badge": "Completed", "badge_variant": "success"}]
+        subtitle: Optional description shown below the heading.
+    """
+    if not PREFAB_AVAILABLE:
+        return {"title": title, "events": events}
+
+    # Map status strings to dot colors
+    dot_colors: dict[str, str] = {
+        "completed": "green",
+        "success": "green",
+        "active": "blue",
+        "in_progress": "blue",
+        "pending": "yellow",
+        "warning": "yellow",
+        "error": "red",
+        "failed": "red",
+        "cancelled": "gray",
+    }
+
+    with Column(gap=5, css_class="p-6 max-w-3xl") as view:
+        Heading(title)
+        if subtitle:
+            Muted(subtitle)
+        with Card():
+            with CardContent(css_class="py-4"):
+                for i, event in enumerate(events):
+                    status = str(event.get("status", "")).lower()
+                    color = dot_colors.get(status, "gray")
+                    with Row(gap=4, align="start", css_class="py-3"):
+                        Dot(color=color, css_class="mt-1.5 shrink-0")
+                        with Column(gap=1, css_class="flex-1"):
+                            with Row(gap=2, align="center"):
+                                Text(str(event["title"]), css_class="font-medium")
+                                badge_text = event.get("badge")
+                                if badge_text:
+                                    Badge(
+                                        str(badge_text),
+                                        variant=event.get("badge_variant", "outline"),
+                                    )
+                            desc = event.get("description")
+                            if desc:
+                                Muted(str(desc))
+                            Small(str(event.get("timestamp", "")), css_class="text-muted-foreground")
+                    if i < len(events) - 1:
+                        Separator()
+
+    return PrefabApp(view=view)
+
+
+# =============================================================================
+# show_progress — Multi-step status tracker
+# =============================================================================
+
+
+@mcp.tool(
+    app=True if PREFAB_AVAILABLE else False,
+    tags=["display"],
+    description="Display a multi-step progress tracker with status indicators.",
+)
+def show_progress(
+    title: str,
+    steps: list[dict[str, str]],
+    subtitle: str = "",
+) -> Any:
+    """Display a multi-step progress tracker.
+
+    Args:
+        title: Tracker heading.
+        steps: Step definitions, each with 'label' and 'status'.
+               Status: 'completed', 'active', 'pending'.
+               Optional: 'description' (str).
+               Example: [{"label": "Order Placed", "status": "completed"},
+                         {"label": "Processing", "status": "active", "description": "Preparing shipment"},
+                         {"label": "Shipped", "status": "pending"},
+                         {"label": "Delivered", "status": "pending"}]
+        subtitle: Optional description shown below the heading.
+    """
+    if not PREFAB_AVAILABLE:
+        return {"title": title, "steps": steps}
+
+    # Calculate overall progress percentage
+    total = len(steps)
+    completed_count = sum(1 for s in steps if s.get("status") == "completed")
+    active_count = sum(1 for s in steps if s.get("status") == "active")
+    progress_pct = int(((completed_count + active_count * 0.5) / max(total, 1)) * 100)
+
+    status_config: dict[str, dict[str, str]] = {
+        "completed": {"color": "green", "badge_variant": "success", "label": "Done"},
+        "active": {"color": "blue", "badge_variant": "info", "label": "In Progress"},
+        "pending": {"color": "gray", "badge_variant": "outline", "label": "Pending"},
+    }
+
+    with Column(gap=5, css_class="p-6 max-w-3xl") as view:
+        Heading(title)
+        if subtitle:
+            Muted(subtitle)
+        Progress(value=progress_pct, css_class="h-2")
+        with Row(gap=2, align="center"):
+            Badge(f"{completed_count}/{total} steps", variant="outline")
+            Muted(f"{progress_pct}% complete")
+        with Card():
+            with CardContent(css_class="py-4"):
+                for i, step in enumerate(steps):
+                    status = step.get("status", "pending")
+                    config = status_config.get(status, status_config["pending"])
+                    with Row(gap=4, align="center", css_class="py-3"):
+                        Dot(color=config["color"], css_class="shrink-0")
+                        with Column(gap=0, css_class="flex-1"):
+                            Text(str(step["label"]), css_class="font-medium")
+                            desc = step.get("description")
+                            if desc:
+                                Muted(str(desc))
+                        Badge(config["label"], variant=config["badge_variant"])
+                    if i < len(steps) - 1:
+                        Separator()
 
     return PrefabApp(view=view)

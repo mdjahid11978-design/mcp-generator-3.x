@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.0] - 2026-04-20
+
+- ✨ Features: MCP Apps Phase 1 — interactive UI display tools (show_table, show_detail, show_chart, show_form, show_comparison, show_metrics, show_timeline, show_progress) with Prefab UI rendering and JSON fallback; Phase 2 planned with --generate-ui to create API-specific tools from OpenAPI schemas
+- 📚 Documentation: Branding/docs refresh accompanying MCP Apps release
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/59
+
+
 All notable changes to MCP Generator 3.x will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

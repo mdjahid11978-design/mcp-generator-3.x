@@ -1,6 +1,12 @@
 # Changelog
 
-## [3.2.2]P26-04-22
+## [3.2.3-alpha+7445647] - 2026-04-22
+
+### Changed
+
+- Dependencies updated
+
+## [3.2.2] - 2026-04-22
 
 ### Changed
 
@@ -16,6 +22,21 @@
 - 📚 Documentation: Update changelog reference for PR #63
 
 **Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/64
+
+
+- 🔧 Chores & Improvements: Internal staging merge and CI/CD housekeeping
+
+Notes:
+- Skipped metadata and merge commits per guidelines
+- No user-facing feature or bug fixes detected in meaningful commits since last release
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/67
+
+
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/70
 
 
 ## [3.2.1] - 2026-04-20

@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.2.2-alpha+683bc42] - 2026-04-22
+
+### Changed
+
+- Dependencies updated
+
+
+- 🔧 Chores & Improvements: Staging merge and CI/workflow updates
+  - Merge develop into staging (staging prep)
+  - Add PyPI publish workflow and related metadata
+  - Update PyPI metadata (classifiers, keywords, urls)
+  - Update contact information
+
+- 📚 Documentation: Update changelog reference for PR #63
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/64
+
+
 ## [3.2.1] - 2026-04-20
 
 - ✨ Features
@@ -38,6 +56,40 @@
   - None detected for this release.
 
 **Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/61
+
+
+
+- ✨ Features
+  - feat: add A2A agent generation and OpenAPI Overlay support
+  - feat: MCP Apps Phase 1 — curated display tools + GenerativeUI wiring
+  - feat: MCP Apps Phase 2 + bump to v3.2.0 (also supports interactive UI display tools)
+
+- 🐛 Bug Fixes
+  - fix: guard against None API results in detail display tools
+  - fix: display renderers use Configuration instead of missing get_api_client
+  - fix: sort imports in __init__.py (stdlib before relative)
+  - fix: resolve ruff lint errors across multiple files (formatting/imports)
+  - fix: ruff 8-file format
+  - fix: resolve all 77 mypy type errors across 18 files
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PRs #59 and #61
+  - docs: add MCP Apps (interactive UI display tools) to README
+  - docs: rename MCP Generator 3.1 -> 3.x across README and CLI
+  - docs: update competitive analysis — new competitors, refreshed data
+
+- 🔧 Chores & Improvements
+  - chore: add PyPI metadata (classifiers, keywords, urls)
+  - chore: add PyPI publish workflow (Trusted Publishers) and fix pyproject urls
+  - chore: bump version to 3.2.1
+  - refactor: derive __version__ from pyproject.toml via importlib.metadata
+  - style: apply ruff formatting to new files
+  - clean and misc fixes for project hygiene
+
+- ⚠️ Breaking Changes
+  - (none)
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/63
 
 
 ## [3.2.0] - 2026-04-20

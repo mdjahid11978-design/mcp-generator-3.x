@@ -1,23 +1,42 @@
 # Changelog
 
-## [3.2.4-alpha+45bda4a] - 2026-04-24
+## [3.2.4+44a9a2c] - 2026-04-24
 
 ### Changed
 
 - Dependencies updated
 
 
-- ✨ Features: Upgrade to FastMCP 3.2.4 with Keycloak auth, elicit fix, and RFC 8707 integration
-- 🔧 Chores & Improvements: Bump dependency to >=3.2.4 and apply deprecation-related fixes for ctx.elicit() (response_type=str)
+- 🔧 Chores & Improvements: CI/CD cleanup to push directly to staging; merge and sync processes streamlined; update version metadata and CHANGELOG automation
+- 📚 Documentation: CHANGELOG updates for PRs #76, #79
+- ⚠️ Breaking Changes: None
+- ✨ Features: Auto-refresh UI enhancements (ToggleState, SetInterval), new dialog UI components (Dialog, Tabs, ExpandableRow, Loader, If), enhanced form tools with loading state and coercion
+- 🐛 Bug Fixes: Display fixes (resource identifier in delete dialog, proper auto-refresh behavior, indentation fixes, 404/null-safe fixes), SendMessage prompts adjustment, escaping/backslash handling in SendMessage
+- 🔧 Chores & Improvements: Code style and lint fixes (ruff), internal cleanup across display module
+- 📚 Documentation: CHANGELOG generation updates
 
-**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/76
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/80
 
 
 
-- ✨ Features: Upgrade to FastMCP 3.2.4 — Keycloak auth, elicit fix, RFC 8707
-- 🔧 Chores & Improvements: Internal build/metadata cleanup (auto)
+- ✨ Features
+  - Display: auto-refresh toggle with persistent state using ToggleState; add SetInterval auto-refresh to table views; include loading state, Submit button behavior, and dynamic result display in SendMessage
 
-**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/79
+- 🐛 Bug Fixes
+  - Display: various UI fixes (dialog components, truncation, table indentation, null-safe handling)
+  - Display: fix delete confirmation to show resource identifier; proper escaping in SendMessage prompts
+
+- 🔧 Chores & Improvements
+  - CI/CD: skip changelog/metadata workflows on release commits; automate version metadata updates and staging promotions
+  - Chore: synchronize main into staging; merge develop into staging improvements
+  - Docs: automated CHANGELOG updates
+
+- ⚠️ Breaking Changes
+  - None identified
+
+Note: Removed update/merge/metadata-only commits per guidance.
+
+**Full Changelog**: https://github.com/quotentiroler/mcp-generator-3.x/pull/82
 
 
 ## [3.2.3]P26-04-23
